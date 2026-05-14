@@ -71,6 +71,7 @@ else
 fi
 
 printf '%s\n' "$VERSION" > "$ROOT_DIR/VERSION"
+printf '%s\n' "$VERSION" > "$ROOT_DIR/PLUGIN_VERSION"
 printf '%s\n' "$SHA256" > "$ROOT_DIR/UPSTREAM_SHA256"
 
 mkdir -p "$ROOT_DIR/dist/upstream"
