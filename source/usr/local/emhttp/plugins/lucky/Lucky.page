@@ -10,6 +10,8 @@ $rc = '/etc/rc.d/rc.lucky';
 $statusScript = "/usr/local/emhttp/plugins/$plugin/scripts/lucky-status";
 $message = '';
 $logs = '';
+global $var;
+$csrfToken = $var['csrf_token'] ?? '';
 
 function lucky_parse_config($file) {
   $config = [];
@@ -122,6 +124,7 @@ $webUrl = 'http://' . ($_SERVER['SERVER_NAME'] ?? 'tower') . ':' . ($config['WEB
   </div>
 
   <form method="post">
+    <input type="hidden" name="csrf_token" value="<?= lucky_h($csrfToken) ?>">
     <input type="hidden" name="action" value="save">
     <table class="lucky-table">
       <tr>
@@ -150,6 +153,7 @@ $webUrl = 'http://' . ($_SERVER['SERVER_NAME'] ?? 'tower') . ':' . ($config['WEB
   </form>
 
   <form method="post" class="lucky-actions">
+    <input type="hidden" name="csrf_token" value="<?= lucky_h($csrfToken) ?>">
     <button type="submit" name="action" value="start">Start</button>
     <button type="submit" name="action" value="stop">Stop</button>
     <button type="submit" name="action" value="restart">Restart</button>
