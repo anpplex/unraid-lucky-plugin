@@ -5,12 +5,18 @@ PID_FILE="/var/run/lucky.pid"
 BIN="/usr/local/lucky/lucky"
 CONFIG_DIR="/boot/config/plugins/lucky/luckyconf"
 WEB_PORT="16601"
-AUTOSTART="yes"
+AUTOSTART="array"
 UPDATE_INTERVAL="off"
 
 if [ -f "$CONFIG" ]; then
   . "$CONFIG"
 fi
+
+case "$AUTOSTART" in
+  yes|array) AUTOSTART="array" ;;
+  boot) AUTOSTART="boot" ;;
+  *) AUTOSTART="no" ;;
+esac
 
 echo "binary=$BIN"
 echo "binary_exists=$([ -x "$BIN" ] && echo yes || echo no)"

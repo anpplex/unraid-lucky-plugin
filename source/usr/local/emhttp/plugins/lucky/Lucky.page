@@ -1,5 +1,5 @@
 Author="Apex"
-Version="2.27.2.5"
+Version="2.27.2.6"
 Title="Lucky"
 Menu="NetworkServices"
 Icon="lucky.png"
@@ -55,6 +55,16 @@ function lucky_write_config($file, $config) {
   file_put_contents($file, implode("\n", $lines) . "\n");
 }
 
+function lucky_normalize_autostart($value) {
+  if ($value === 'yes' || $value === 'array') {
+    return 'array';
+  }
+  if ($value === 'boot') {
+    return 'boot';
+  }
+  return 'no';
+}
+
 function lucky_apply_update_schedule($script) {
   if (!is_executable($script)) {
     return '';
@@ -103,6 +113,7 @@ function lucky_h($value) {
 
 $defaults = lucky_parse_config($defaultsFile);
 $config = array_merge($defaults, lucky_parse_config($configFile));
+$config['AUTOSTART'] = lucky_normalize_autostart($config['AUTOSTART'] ?? 'array');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $action = $_POST['action'] ?? '';
@@ -110,7 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if ($action === 'save') {
     $config['CONFIG_DIR'] = trim($_POST['CONFIG_DIR'] ?? $config['CONFIG_DIR']);
     $config['WEB_PORT'] = preg_replace('/[^0-9]/', '', $_POST['WEB_PORT'] ?? $config['WEB_PORT']);
-    $config['AUTOSTART'] = ($_POST['AUTOSTART'] ?? 'no') === 'yes' ? 'yes' : 'no';
+    $config['AUTOSTART'] = lucky_normalize_autostart($_POST['AUTOSTART'] ?? $config['AUTOSTART']);
     $config['EXTRA_ARGS'] = trim($_POST['EXTRA_ARGS'] ?? '');
     $interval = $_POST['UPDATE_INTERVAL'] ?? ($config['UPDATE_INTERVAL'] ?? 'off');
     $config['UPDATE_INTERVAL'] = in_array($interval, ['off', 'daily', 'weekly', 'monthly'], true) ? $interval : 'off';
@@ -181,11 +192,12 @@ $webUrl = 'http://' . $host . ':' . ($config['WEB_PORT'] ?? '16601');
         <td><input type="text" name="WEB_PORT" value="<?= lucky_h($config['WEB_PORT'] ?? '16601') ?>"></td>
       </tr>
       <tr>
-        <td>Autostart with array</td>
+        <td>Lucky 自动启动</td>
         <td>
           <select name="AUTOSTART">
-            <option value="yes" <?= ($config['AUTOSTART'] ?? 'yes') === 'yes' ? 'selected' : '' ?>>yes</option>
-            <option value="no" <?= ($config['AUTOSTART'] ?? 'yes') === 'no' ? 'selected' : '' ?>>no</option>
+            <option value="array" <?= ($config['AUTOSTART'] ?? 'array') === 'array' ? 'selected' : '' ?>>随阵列启动自动启动 Lucky</option>
+            <option value="boot" <?= ($config['AUTOSTART'] ?? 'array') === 'boot' ? 'selected' : '' ?>>Unraid 开机自动启动 Lucky</option>
+            <option value="no" <?= ($config['AUTOSTART'] ?? 'array') === 'no' ? 'selected' : '' ?>>不自动启动</option>
           </select>
         </td>
       </tr>

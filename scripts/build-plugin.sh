@@ -188,7 +188,7 @@ sed \
 - Install Lucky ${VERSION} Linux x86_64 binary directly.
 - Add Lucky runtime controls, update controls, and a compact plugin summary.
 - Add persistent runtime configuration under /boot/config/plugins/lucky.
-- Add array-start autostart event hook.
+- Add boot and array-start Lucky autostart modes.
   </CHANGES>
 
   <FILE Run="/bin/bash">
