@@ -1,0 +1,12 @@
+#!/bin/sh
+
+CONFIG="/boot/config/plugins/lucky/lucky.cfg"
+AUTOSTART="yes"
+
+if [ -f "$CONFIG" ]; then
+  . "$CONFIG"
+fi
+
+if [ "$AUTOSTART" = "yes" ] && [ -x /etc/rc.d/rc.lucky ]; then
+  /etc/rc.d/rc.lucky start >/dev/null 2>&1 &
+fi
