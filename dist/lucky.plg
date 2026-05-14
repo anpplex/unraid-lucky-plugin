@@ -2,7 +2,7 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name "lucky">
 <!ENTITY author "Codex">
-<!ENTITY version "2.27.2.1">
+<!ENTITY version "2.27.2.2">
 <!ENTITY launch "Settings/Lucky">
 ]>
 <PLUGIN name="&name;"
@@ -11,7 +11,7 @@
         launch="&launch;">
 
   <CHANGES>
-## 2.27.2.1
+## 2.27.2.2
 
 - Install Lucky 2.27.2 Linux x86_64 binary directly.
 - Fix Unraid Settings page CSRF token handling.
@@ -20,8 +20,8 @@
   </CHANGES>
 
   <FILE Name="/boot/config/plugins/&name;/lucky-&version;-x86_64-1.txz" Run="upgradepkg --install-new">
-    <URL>https://raw.githubusercontent.com/anpplex/unraid-lucky-plugin/main/dist/packages/lucky-2.27.2.1-x86_64-1.txz</URL>
-    <MD5>4b3ccd6f1ebc314d12677f72d222c63b</MD5>
+    <URL>https://raw.githubusercontent.com/anpplex/unraid-lucky-plugin/main/dist/packages/lucky-2.27.2.2-x86_64-1.txz</URL>
+    <MD5>ff1ceab081a7ffbc246007ec486b11fc</MD5>
   </FILE>
 
   <FILE Run="/bin/bash">
