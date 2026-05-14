@@ -15,6 +15,7 @@
 
 - Install Lucky @VERSION@ Linux x86_64 binary directly.
 - Add Lucky runtime controls, update controls, and a compact plugin summary.
+- Add Chinese/English plugin UI language switching, defaulting to Chinese.
 - Add persistent runtime configuration under /boot/config/plugins/lucky.
 - Add boot and array-start Lucky autostart modes.
   </CHANGES>

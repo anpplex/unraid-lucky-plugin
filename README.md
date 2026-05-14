@@ -50,6 +50,7 @@ dist/lucky-x86_64.plg
 - PID 文件：`/var/run/lucky.pid`
 - 插件自动更新计划：`/etc/cron.d/lucky-plugin-update`
 - Lucky 自动启动模式：`boot` 为 Unraid 开机启动，`array` 为阵列启动后启动，`no` 为关闭自动启动。
+- 插件页面语言：默认中文，可在 Lucky 页面切换中文/English。
 
 ### 构建
 
@@ -128,6 +129,7 @@ dist/lucky-x86_64.plg
 - PID file: `/var/run/lucky.pid`
 - Plugin auto-update schedule: `/etc/cron.d/lucky-plugin-update`
 - Lucky startup mode: `boot` starts with Unraid boot, `array` starts after the array starts, and `no` disables autostart.
+- Plugin page language: defaults to Chinese and can switch between Chinese and English on the Lucky page.
 
 ### Build
 

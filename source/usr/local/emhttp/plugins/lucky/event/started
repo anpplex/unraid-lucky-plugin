@@ -13,7 +13,7 @@ case "$AUTOSTART" in
   *) AUTOSTART="no" ;;
 esac
 
-if { [ "$AUTOSTART" = "array" ] || [ "$AUTOSTART" = "boot" ]; } && [ -x /etc/rc.d/rc.lucky ]; then
+if [ "$AUTOSTART" = "array" ] && [ -x /etc/rc.d/rc.lucky ]; then
   /etc/rc.d/rc.lucky start >/dev/null 2>&1 &
 fi
 
