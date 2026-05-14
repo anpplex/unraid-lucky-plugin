@@ -1,0 +1,51 @@
+<?xml version="1.0" standalone="yes"?>
+<!DOCTYPE PLUGIN [
+<!ENTITY name "lucky">
+<!ENTITY author "Codex">
+<!ENTITY version "@VERSION@">
+<!ENTITY launch "Settings/Lucky">
+]>
+<PLUGIN name="&name;"
+        author="&author;"
+        version="&version;"
+        launch="&launch;">
+
+  <CHANGES>
+## @VERSION@
+
+- Install Lucky @VERSION@ Linux x86_64 binary directly.
+- Add persistent runtime configuration under /boot/config/plugins/lucky.
+- Add array-start autostart event hook.
+  </CHANGES>
+
+  <FILE Name="/boot/config/plugins/&name;/lucky-&version;-x86_64-1.txz" Run="upgradepkg --install-new">
+    <URL>@PACKAGE_URL@</URL>
+    <MD5>@PACKAGE_MD5@</MD5>
+  </FILE>
+
+  <FILE Run="/bin/bash">
+    <INLINE>
+mkdir -p /boot/config/plugins/lucky
+if [ ! -f /boot/config/plugins/lucky/lucky.cfg ]; then
+  cp /usr/local/emhttp/plugins/lucky/defaults/lucky.cfg /boot/config/plugins/lucky/lucky.cfg
+fi
+mkdir -p /boot/config/plugins/lucky/luckyconf /usr/local/sbin
+ln -sf /usr/local/lucky/lucky /usr/local/sbin/lucky
+chmod 0755 /usr/local/lucky/lucky
+chmod 0755 /etc/rc.d/rc.lucky
+chmod 0755 /usr/local/emhttp/plugins/lucky/event/started
+chmod 0755 /usr/local/emhttp/plugins/lucky/scripts/lucky-status
+    </INLINE>
+  </FILE>
+
+  <FILE Run="/bin/bash" Method="remove">
+    <INLINE>
+/etc/rc.d/rc.lucky stop >/dev/null 2&gt;&amp;1 || true
+removepkg lucky >/dev/null 2&gt;&amp;1 || true
+rm -rf /usr/local/emhttp/plugins/lucky
+rm -rf /usr/local/lucky
+rm -f /usr/local/sbin/lucky
+rm -f /etc/rc.d/rc.lucky
+    </INLINE>
+  </FILE>
+</PLUGIN>
