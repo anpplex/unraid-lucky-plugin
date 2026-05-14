@@ -74,9 +74,14 @@ rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR" "$PKG_DIR"
 rm -f "$PKG_DIR"/lucky-*-x86_64-1.txz
 cp -R "$ROOT_DIR/source/." "$BUILD_DIR/"
-if ! curl -L --fail --connect-timeout 20 --max-time 60 -o "$BUILD_DIR/usr/local/emhttp/plugins/lucky/lucky.png" "$ICON_URL"; then
-  echo "failed to download Lucky plugin icon" >&2
-  exit 1
+if [[ -f "$BUILD_DIR/usr/local/emhttp/plugins/lucky/lucky.png.b64" ]]; then
+  base64 -d < "$BUILD_DIR/usr/local/emhttp/plugins/lucky/lucky.png.b64" > "$BUILD_DIR/usr/local/emhttp/plugins/lucky/lucky.png"
+  rm -f "$BUILD_DIR/usr/local/emhttp/plugins/lucky/lucky.png.b64"
+else
+  if ! curl -L --fail --connect-timeout 20 --max-time 60 -o "$BUILD_DIR/usr/local/emhttp/plugins/lucky/lucky.png" "$ICON_URL"; then
+    echo "failed to download Lucky plugin icon" >&2
+    exit 1
+  fi
 fi
 mkdir -p "$BUILD_DIR/usr/local/lucky"
 tar -xzf "$UPSTREAM_ARCHIVE" -C "$BUILD_DIR/usr/local/lucky" lucky LICENSE scripts
@@ -128,6 +133,7 @@ base64_encode_file() {
 emit_base64_file_blocks() {
   local pkg="$1"
   local chunk_lines=5000
+  local chunk=0
 
   base64_encode_file "$pkg" | awk -v chunk_lines="$chunk_lines" '
     (NR - 1) % chunk_lines == 0 {
@@ -136,6 +142,7 @@ emit_base64_file_blocks() {
         print "    ]]></INLINE>"
         print "  </FILE>"
       }
+      chunk++
       print "  <FILE Run=\"/bin/bash\">"
       print "    <INLINE><![CDATA["
       print "cat >> /boot/config/plugins/lucky/lucky-package.b64 <<'\''LUCKY_PACKAGE_BASE64'\''"

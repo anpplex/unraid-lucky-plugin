@@ -41,8 +41,8 @@ chmod 0755 /usr/local/emhttp/plugins/lucky/scripts/lucky-status
 
   <FILE Run="/bin/bash" Method="remove">
     <INLINE>
-/etc/rc.d/rc.lucky stop >/dev/null 2&gt;&amp;1 || true
-removepkg lucky >/dev/null 2&gt;&amp;1 || true
+/etc/rc.d/rc.lucky stop >/dev/null 2>&amp;1 || true
+removepkg lucky >/dev/null 2>&amp;1 || true
 rm -rf /usr/local/emhttp/plugins/lucky
 rm -rf /usr/local/lucky
 rm -f /usr/local/sbin/lucky

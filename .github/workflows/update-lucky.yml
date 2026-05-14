@@ -36,7 +36,7 @@ jobs:
 
       - name: Read version
         id: version
-        run: echo "version=$(cat PLUGIN_VERSION)" >> "$GITHUB_OUTPUT"
+        run: echo "version=$(cat VERSION)" >> "$GITHUB_OUTPUT"
 
       - name: Install validation tools
         run: sudo apt-get update && sudo apt-get install -y libxml2-utils
@@ -51,5 +51,5 @@ jobs:
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Update Lucky plugin to ${{ steps.version.outputs.version }}"
+          commit_message: "Update Lucky to ${{ steps.version.outputs.version }}"
           file_pattern: VERSION PLUGIN_VERSION UPSTREAM_SHA256 dist/lucky.plg dist/lucky-x86_64.plg dist/packages/*.txz
