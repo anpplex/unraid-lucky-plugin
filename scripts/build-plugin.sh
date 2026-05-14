@@ -16,6 +16,7 @@ PLG_PATH="$DIST_DIR/lucky.plg"
 STANDALONE_PLG_PATH="$DIST_DIR/lucky-x86_64.plg"
 UPSTREAM_DIR="$DIST_DIR/upstream"
 UPSTREAM_ARCHIVE="$UPSTREAM_DIR/lucky_${VERSION}_Linux_x86_64.tar.gz"
+ICON_URL="${LUCKY_ICON_URL:-https://cdn.jsdelivr.net/gh/IceWhaleTech/CasaOS-AppStore@main/Apps/Lucky/icon.png}"
 UPSTREAM_URLS=(
   "https://release.66666.host/v${VERSION}/${VERSION}_lucky/lucky_${VERSION}_Linux_x86_64.tar.gz"
   "https://github.com/gdy666/lucky/releases/download/v${VERSION}/lucky_${VERSION}_Linux_x86_64.tar.gz"
@@ -73,6 +74,10 @@ rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR" "$PKG_DIR"
 rm -f "$PKG_DIR"/lucky-*-x86_64-1.txz
 cp -R "$ROOT_DIR/source/." "$BUILD_DIR/"
+if ! curl -L --fail --connect-timeout 20 --max-time 60 -o "$BUILD_DIR/usr/local/emhttp/plugins/lucky/lucky.png" "$ICON_URL"; then
+  echo "failed to download Lucky plugin icon" >&2
+  exit 1
+fi
 mkdir -p "$BUILD_DIR/usr/local/lucky"
 tar -xzf "$UPSTREAM_ARCHIVE" -C "$BUILD_DIR/usr/local/lucky" lucky LICENSE scripts
 chmod 0755 "$BUILD_DIR/usr/local/lucky/lucky"
