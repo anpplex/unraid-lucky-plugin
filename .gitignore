@@ -1,0 +1,4 @@
+dist/build/
+dist/upstream/extract/
+dist/upstream/*.tar.gz
+.DS_Store
