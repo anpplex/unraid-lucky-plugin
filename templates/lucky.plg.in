@@ -2,7 +2,7 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name "lucky">
 <!ENTITY author "Codex">
-<!ENTITY version "@VERSION@">
+<!ENTITY version "@PLUGIN_VERSION@">
 <!ENTITY launch "Settings/Lucky">
 ]>
 <PLUGIN name="&name;"
@@ -11,9 +11,10 @@
         launch="&launch;">
 
   <CHANGES>
-## @VERSION@
+## @PLUGIN_VERSION@
 
 - Install Lucky @VERSION@ Linux x86_64 binary directly.
+- Fix Unraid Settings page CSRF token handling.
 - Add persistent runtime configuration under /boot/config/plugins/lucky.
 - Add array-start autostart event hook.
   </CHANGES>
