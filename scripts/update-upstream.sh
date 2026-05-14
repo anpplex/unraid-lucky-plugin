@@ -49,6 +49,8 @@ ASSET_NAME="$(printf '%s\n' "$release_info" | sed -n '2p')"
 ASSET_URL="$(printf '%s\n' "$release_info" | sed -n '3p')"
 MIRROR_URL="https://release.66666.host/v${VERSION}/${VERSION}_lucky/${ASSET_NAME}"
 ARCHIVE="$TMP_DIR/$ASSET_NAME"
+CURRENT_VERSION="$(sed -n -e 's/^VERSION=//p' -e '/^[0-9]/{p;q;}' "$ROOT_DIR/VERSION" 2>/dev/null | head -n 1 || true)"
+CURRENT_PLUGIN_VERSION="$(sed -n -e 's/^PLUGIN_VERSION=//p' -e '/^[0-9]/{p;q;}' "$ROOT_DIR/PLUGIN_VERSION" 2>/dev/null | head -n 1 || true)"
 
 downloaded=no
 for url in "$MIRROR_URL" "$ASSET_URL"; do
@@ -71,7 +73,11 @@ else
 fi
 
 printf '%s\n' "$VERSION" > "$ROOT_DIR/VERSION"
-printf '%s\n' "$VERSION" > "$ROOT_DIR/PLUGIN_VERSION"
+if [[ "$VERSION" != "$CURRENT_VERSION" || -z "$CURRENT_PLUGIN_VERSION" ]]; then
+  printf '%s\n' "$VERSION" > "$ROOT_DIR/PLUGIN_VERSION"
+else
+  printf '%s\n' "$CURRENT_PLUGIN_VERSION" > "$ROOT_DIR/PLUGIN_VERSION"
+fi
 printf '%s\n' "$SHA256" > "$ROOT_DIR/UPSTREAM_SHA256"
 
 mkdir -p "$ROOT_DIR/dist/upstream"
