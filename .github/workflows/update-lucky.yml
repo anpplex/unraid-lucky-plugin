@@ -37,6 +37,9 @@ jobs:
         id: version
         run: echo "version=$(cat VERSION)" >> "$GITHUB_OUTPUT"
 
+      - name: Install validation tools
+        run: sudo apt-get update && sudo apt-get install -y libxml2-utils
+
       - name: Validate outputs
         run: |
           xmllint --noout dist/lucky.plg
