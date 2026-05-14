@@ -7,6 +7,7 @@ on:
       - main
     paths:
       - VERSION
+      - PLUGIN_VERSION
       - UPSTREAM_SHA256
       - scripts/**
       - source/**
@@ -35,7 +36,7 @@ jobs:
 
       - name: Read version
         id: version
-        run: echo "version=$(cat VERSION)" >> "$GITHUB_OUTPUT"
+        run: echo "version=$(cat PLUGIN_VERSION)" >> "$GITHUB_OUTPUT"
 
       - name: Install validation tools
         run: sudo apt-get update && sudo apt-get install -y libxml2-utils
@@ -45,10 +46,10 @@ jobs:
           xmllint --noout dist/lucky.plg
           xmllint --noout dist/lucky-x86_64.plg
           bash -n scripts/build-plugin.sh source/etc/rc.d/rc.lucky source/install/doinst.sh source/usr/local/emhttp/plugins/lucky/event/started source/usr/local/emhttp/plugins/lucky/scripts/lucky-status
-          tar -tf "dist/packages/lucky-$(cat VERSION)-x86_64-1.txz" | grep -q 'usr/local/lucky/lucky'
+          tar -tf "dist/packages/lucky-$(cat PLUGIN_VERSION)-x86_64-1.txz" | grep -q 'usr/local/lucky/lucky'
 
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Update Lucky to ${{ steps.version.outputs.version }}"
-          file_pattern: VERSION UPSTREAM_SHA256 dist/lucky.plg dist/lucky-x86_64.plg dist/packages/*.txz
+          commit_message: "Update Lucky plugin to ${{ steps.version.outputs.version }}"
+          file_pattern: VERSION PLUGIN_VERSION UPSTREAM_SHA256 dist/lucky.plg dist/lucky-x86_64.plg dist/packages/*.txz
