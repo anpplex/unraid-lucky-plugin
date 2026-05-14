@@ -1,0 +1,30 @@
+#!/bin/sh
+
+CONFIG="/boot/config/plugins/lucky/lucky.cfg"
+PID_FILE="/var/run/lucky.pid"
+BIN="/usr/local/lucky/lucky"
+CONFIG_DIR="/boot/config/plugins/lucky/luckyconf"
+WEB_PORT="16601"
+AUTOSTART="yes"
+
+if [ -f "$CONFIG" ]; then
+  . "$CONFIG"
+fi
+
+echo "binary=$BIN"
+echo "binary_exists=$([ -x "$BIN" ] && echo yes || echo no)"
+echo "config_dir=$CONFIG_DIR"
+echo "web_port=$WEB_PORT"
+echo "autostart=$AUTOSTART"
+
+if [ -f "$PID_FILE" ]; then
+  PID="$(cat "$PID_FILE" 2>/dev/null)"
+  if [ -n "$PID" ] && kill -0 "$PID" 2>/dev/null; then
+    echo "running=yes"
+    echo "pid=$PID"
+    exit 0
+  fi
+fi
+
+echo "running=no"
+echo "pid="
