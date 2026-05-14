@@ -4,8 +4,9 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BASE_URL="${1:-${PLUGIN_BASE_URL:-}}"
 VERSION="$(sed -n -e 's/^VERSION=//p' -e '/^[0-9]/{p;q;}' "$ROOT_DIR/VERSION" | head -n 1)"
+PLUGIN_VERSION="$(sed -n -e 's/^PLUGIN_VERSION=//p' -e '/^[0-9]/{p;q;}' "$ROOT_DIR/PLUGIN_VERSION" | head -n 1)"
 UPSTREAM_SHA256="$(sed -n -e 's/^SHA256=//p' -e '/^[0-9a-fA-F]/{p;q;}' "$ROOT_DIR/UPSTREAM_SHA256" | head -n 1)"
-PKG_NAME="lucky-${VERSION}-x86_64-1.txz"
+PKG_NAME="lucky-${PLUGIN_VERSION}-x86_64-1.txz"
 DIST_DIR="$ROOT_DIR/dist"
 PKG_DIR="$DIST_DIR/packages"
 BUILD_DIR="$DIST_DIR/build/lucky-package"
@@ -25,8 +26,8 @@ if [[ -z "$BASE_URL" ]]; then
   exit 2
 fi
 
-if [[ -z "$VERSION" || -z "$UPSTREAM_SHA256" ]]; then
-  echo "VERSION and UPSTREAM_SHA256 must be set" >&2
+if [[ -z "$VERSION" || -z "$PLUGIN_VERSION" || -z "$UPSTREAM_SHA256" ]]; then
+  echo "VERSION, PLUGIN_VERSION, and UPSTREAM_SHA256 must be set" >&2
   exit 2
 fi
 
@@ -122,7 +123,6 @@ base64_encode_file() {
 emit_base64_file_blocks() {
   local pkg="$1"
   local chunk_lines=5000
-  local chunk=0
 
   base64_encode_file "$pkg" | awk -v chunk_lines="$chunk_lines" '
     (NR - 1) % chunk_lines == 0 {
@@ -131,7 +131,6 @@ emit_base64_file_blocks() {
         print "    ]]></INLINE>"
         print "  </FILE>"
       }
-      chunk++
       print "  <FILE Run=\"/bin/bash\">"
       print "    <INLINE><![CDATA["
       print "cat >> /boot/config/plugins/lucky/lucky-package.b64 <<'\''LUCKY_PACKAGE_BASE64'\''"
@@ -150,6 +149,7 @@ emit_base64_file_blocks() {
 PKG_URL="${BASE_URL%/}/dist/packages/$PKG_NAME"
 sed \
   -e "s|@VERSION@|$VERSION|g" \
+  -e "s|@PLUGIN_VERSION@|$PLUGIN_VERSION|g" \
   -e "s|@PACKAGE_URL@|$PKG_URL|g" \
   -e "s|@PACKAGE_MD5@|$MD5|g" \
   "$PLG_TEMPLATE" > "$PLG_PATH"
@@ -160,7 +160,7 @@ sed \
 <!DOCTYPE PLUGIN [
 <!ENTITY name "lucky">
 <!ENTITY author "Codex">
-<!ENTITY version "$VERSION">
+<!ENTITY version "$PLUGIN_VERSION">
 <!ENTITY launch "Settings/Lucky">
 ]>
 <PLUGIN name="&name;"
@@ -169,9 +169,10 @@ sed \
         launch="&launch;">
 
   <CHANGES>
-## $VERSION
+## $PLUGIN_VERSION
 
 - Install Lucky ${VERSION} Linux x86_64 binary directly.
+- Fix Unraid Settings page CSRF token handling.
 - Add persistent runtime configuration under /boot/config/plugins/lucky.
 - Add array-start autostart event hook.
   </CHANGES>
