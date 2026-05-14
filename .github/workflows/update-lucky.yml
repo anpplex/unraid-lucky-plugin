@@ -28,10 +28,10 @@ jobs:
       - name: Update upstream metadata
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: ./scripts/update-upstream.sh
+        run: bash scripts/update-upstream.sh
 
       - name: Build plugin
-        run: ./scripts/build-plugin.sh "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${GITHUB_REF_NAME}"
+        run: bash scripts/build-plugin.sh "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${GITHUB_REF_NAME}"
 
       - name: Read version
         id: version
