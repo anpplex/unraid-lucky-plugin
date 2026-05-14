@@ -2,7 +2,7 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name "lucky">
 <!ENTITY author "Codex">
-<!ENTITY version "2.27.2.2">
+<!ENTITY version "2.27.2.3">
 <!ENTITY launch "Settings/Lucky">
 ]>
 <PLUGIN name="&name;"
@@ -11,7 +11,7 @@
         launch="&launch;">
 
   <CHANGES>
-## 2.27.2.2
+## 2.27.2.3
 
 - Install Lucky 2.27.2 Linux x86_64 binary directly.
 - Fix Unraid Settings page CSRF token handling.
@@ -20,8 +20,8 @@
   </CHANGES>
 
   <FILE Name="/boot/config/plugins/&name;/lucky-&version;-x86_64-1.txz" Run="upgradepkg --install-new">
-    <URL>https://raw.githubusercontent.com/anpplex/unraid-lucky-plugin/main/dist/packages/lucky-2.27.2.2-x86_64-1.txz</URL>
-    <MD5>27f8b4028e21c87fa5ecda7fc89b31d0</MD5>
+    <URL>https://raw.githubusercontent.com/anpplex/unraid-lucky-plugin/main/dist/packages/lucky-2.27.2.3-x86_64-1.txz</URL>
+    <MD5>b71e7c04d3ef0a6c3b675f97bdc50445</MD5>
   </FILE>
 
   <FILE Run="/bin/bash">
@@ -41,8 +41,8 @@ chmod 0755 /usr/local/emhttp/plugins/lucky/scripts/lucky-status
 
   <FILE Run="/bin/bash" Method="remove">
     <INLINE>
-/etc/rc.d/rc.lucky stop >/dev/null 2&gt;&amp;1 || true
-removepkg lucky >/dev/null 2&gt;&amp;1 || true
+/etc/rc.d/rc.lucky stop >/dev/null 2>&amp;1 || true
+removepkg lucky >/dev/null 2>&amp;1 || true
 rm -rf /usr/local/emhttp/plugins/lucky
 rm -rf /usr/local/lucky
 rm -f /usr/local/sbin/lucky
