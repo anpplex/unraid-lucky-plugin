@@ -1,6 +1,6 @@
 Author="anpplex"
-Version="2.27.2.3"
+Version="2.27.2.4"
 Title="Lucky"
-Menu="Settings"
+Menu="NetworkServices"
 Icon="lucky.png"
 Type="menu"

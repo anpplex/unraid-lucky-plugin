@@ -105,6 +105,8 @@ DESC
 chmod 0755 "$BUILD_DIR/etc/rc.d/rc.lucky"
 chmod 0755 "$BUILD_DIR/usr/local/emhttp/plugins/lucky/event/started"
 chmod 0755 "$BUILD_DIR/usr/local/emhttp/plugins/lucky/scripts/lucky-status"
+chmod 0755 "$BUILD_DIR/usr/local/emhttp/plugins/lucky/scripts/lucky-plugin-update"
+chmod 0755 "$BUILD_DIR/usr/local/emhttp/plugins/lucky/scripts/lucky-update-schedule"
 chmod 0755 "$BUILD_DIR/install/doinst.sh"
 
 tar -C "$BUILD_DIR" --owner=0 --group=0 -cJf "$PKG_PATH" .
@@ -217,6 +219,9 @@ chmod 0755 /usr/local/lucky/lucky
 chmod 0755 /etc/rc.d/rc.lucky
 chmod 0755 /usr/local/emhttp/plugins/lucky/event/started
 chmod 0755 /usr/local/emhttp/plugins/lucky/scripts/lucky-status
+chmod 0755 /usr/local/emhttp/plugins/lucky/scripts/lucky-plugin-update
+chmod 0755 /usr/local/emhttp/plugins/lucky/scripts/lucky-update-schedule
+/usr/local/emhttp/plugins/lucky/scripts/lucky-update-schedule apply >/dev/null 2>&1 || true
     ]]></INLINE>
   </FILE>
 

@@ -10,3 +10,7 @@ fi
 if [ "$AUTOSTART" = "yes" ] && [ -x /etc/rc.d/rc.lucky ]; then
   /etc/rc.d/rc.lucky start >/dev/null 2>&1 &
 fi
+
+if [ -x /usr/local/emhttp/plugins/lucky/scripts/lucky-update-schedule ]; then
+  /usr/local/emhttp/plugins/lucky/scripts/lucky-update-schedule apply >/dev/null 2>&1 || true
+fi

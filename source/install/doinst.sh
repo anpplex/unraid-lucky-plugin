@@ -13,3 +13,6 @@ ln -sf /usr/local/lucky/lucky /usr/local/sbin/lucky
 chmod 0755 /etc/rc.d/rc.lucky
 chmod 0755 /usr/local/emhttp/plugins/lucky/event/started
 chmod 0755 /usr/local/emhttp/plugins/lucky/scripts/lucky-status
+chmod 0755 /usr/local/emhttp/plugins/lucky/scripts/lucky-plugin-update
+chmod 0755 /usr/local/emhttp/plugins/lucky/scripts/lucky-update-schedule
+/usr/local/emhttp/plugins/lucky/scripts/lucky-update-schedule apply >/dev/null 2>&1 || true

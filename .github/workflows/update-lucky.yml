@@ -45,7 +45,7 @@ jobs:
         run: |
           xmllint --noout dist/lucky.plg
           xmllint --noout dist/lucky-x86_64.plg
-          bash -n scripts/build-plugin.sh source/etc/rc.d/rc.lucky source/install/doinst.sh source/usr/local/emhttp/plugins/lucky/event/started source/usr/local/emhttp/plugins/lucky/scripts/lucky-status
+          bash -n scripts/build-plugin.sh source/etc/rc.d/rc.lucky source/install/doinst.sh source/usr/local/emhttp/plugins/lucky/event/started source/usr/local/emhttp/plugins/lucky/scripts/lucky-status source/usr/local/emhttp/plugins/lucky/scripts/lucky-plugin-update source/usr/local/emhttp/plugins/lucky/scripts/lucky-update-schedule
           tar -tf "dist/packages/lucky-$(cat PLUGIN_VERSION)-x86_64-1.txz" | grep -q 'usr/local/lucky/lucky'
 
       - name: Commit changes

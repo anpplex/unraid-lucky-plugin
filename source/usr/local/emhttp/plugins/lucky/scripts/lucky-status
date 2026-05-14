@@ -6,6 +6,7 @@ BIN="/usr/local/lucky/lucky"
 CONFIG_DIR="/boot/config/plugins/lucky/luckyconf"
 WEB_PORT="16601"
 AUTOSTART="yes"
+UPDATE_INTERVAL="off"
 
 if [ -f "$CONFIG" ]; then
   . "$CONFIG"
@@ -16,6 +17,7 @@ echo "binary_exists=$([ -x "$BIN" ] && echo yes || echo no)"
 echo "config_dir=$CONFIG_DIR"
 echo "web_port=$WEB_PORT"
 echo "autostart=$AUTOSTART"
+echo "update_interval=$UPDATE_INTERVAL"
 
 if [ -f "$PID_FILE" ]; then
   PID="$(cat "$PID_FILE" 2>/dev/null)"

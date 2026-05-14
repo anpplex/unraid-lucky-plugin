@@ -36,6 +36,9 @@ chmod 0755 /usr/local/lucky/lucky
 chmod 0755 /etc/rc.d/rc.lucky
 chmod 0755 /usr/local/emhttp/plugins/lucky/event/started
 chmod 0755 /usr/local/emhttp/plugins/lucky/scripts/lucky-status
+chmod 0755 /usr/local/emhttp/plugins/lucky/scripts/lucky-plugin-update
+chmod 0755 /usr/local/emhttp/plugins/lucky/scripts/lucky-update-schedule
+/usr/local/emhttp/plugins/lucky/scripts/lucky-update-schedule apply >/dev/null 2&gt;&amp;1 || true
     </INLINE>
   </FILE>
 

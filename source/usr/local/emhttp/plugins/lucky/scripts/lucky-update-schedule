@@ -1,0 +1,28 @@
+#!/bin/sh
+
+CONFIG="/boot/config/plugins/lucky/lucky.cfg"
+CRON_FILE="/etc/cron.d/lucky-plugin-update"
+UPDATE_INTERVAL="off"
+
+if [ -f "$CONFIG" ]; then
+  . "$CONFIG"
+fi
+
+mkdir -p "$(dirname "$CRON_FILE")"
+
+case "$UPDATE_INTERVAL" in
+  daily)
+    echo '17 4 * * * root /usr/local/emhttp/plugins/lucky/scripts/lucky-plugin-update install >> /var/log/lucky-plugin-update.log 2>&1' > "$CRON_FILE"
+    ;;
+  weekly)
+    echo '23 4 * * 1 root /usr/local/emhttp/plugins/lucky/scripts/lucky-plugin-update install >> /var/log/lucky-plugin-update.log 2>&1' > "$CRON_FILE"
+    ;;
+  monthly)
+    echo '29 4 1 * * root /usr/local/emhttp/plugins/lucky/scripts/lucky-plugin-update install >> /var/log/lucky-plugin-update.log 2>&1' > "$CRON_FILE"
+    ;;
+  off|*)
+    rm -f "$CRON_FILE"
+    ;;
+esac
+
+exit 0

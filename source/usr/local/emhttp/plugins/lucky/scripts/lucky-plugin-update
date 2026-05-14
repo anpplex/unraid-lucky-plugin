@@ -1,0 +1,64 @@
+#!/bin/sh
+
+PLUGIN_URL="${LUCKY_PLUGIN_URL:-https://raw.githubusercontent.com/anpplex/unraid-lucky-plugin/main/dist/lucky.plg}"
+LOCAL_PAGE="/usr/local/emhttp/plugins/lucky/Lucky.page"
+TMP_PLG="/tmp/lucky-latest.plg"
+
+current_version() {
+  sed -n 's/^Version="\([^"]*\)".*/\1/p' "$LOCAL_PAGE" 2>/dev/null | head -n 1
+}
+
+latest_version() {
+  sed -n 's/^<!ENTITY version "\([^"]*\)">.*/\1/p' "$TMP_PLG" 2>/dev/null | head -n 1
+}
+
+version_gt() {
+  [ "$1" != "$2" ] || return 1
+  [ "$(printf '%s\n%s\n' "$2" "$1" | sort -V | tail -n 1)" = "$1" ]
+}
+
+download_plg() {
+  rm -f "$TMP_PLG"
+  curl -fsSL --connect-timeout 20 --max-time 120 -o "$TMP_PLG" "$PLUGIN_URL"
+}
+
+ACTION="${1:-check}"
+CURRENT="$(current_version)"
+CURRENT="${CURRENT:-0}"
+
+if ! download_plg; then
+  echo "Failed to download Lucky plugin metadata: $PLUGIN_URL"
+  exit 1
+fi
+
+LATEST="$(latest_version)"
+if [ -z "$LATEST" ]; then
+  echo "Failed to parse latest Lucky plugin version."
+  rm -f "$TMP_PLG"
+  exit 1
+fi
+
+case "$ACTION" in
+  check)
+    if version_gt "$LATEST" "$CURRENT"; then
+      echo "Update available: $CURRENT -> $LATEST"
+    else
+      echo "Lucky plugin is up to date: $CURRENT"
+    fi
+    ;;
+  install)
+    if version_gt "$LATEST" "$CURRENT"; then
+      echo "Installing Lucky plugin update: $CURRENT -> $LATEST"
+      installplg "$PLUGIN_URL"
+    else
+      echo "Lucky plugin is up to date: $CURRENT"
+    fi
+    ;;
+  *)
+    echo "usage: $0 {check|install}" >&2
+    rm -f "$TMP_PLG"
+    exit 2
+    ;;
+esac
+
+rm -f "$TMP_PLG"

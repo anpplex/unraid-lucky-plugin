@@ -45,9 +45,10 @@ dist/lucky-x86_64.plg
 - Lucky 配置目录：`/boot/config/plugins/lucky/luckyconf`
 - 插件配置文件：`/boot/config/plugins/lucky/lucky.cfg`
 - 启停脚本：`/etc/rc.d/rc.lucky`
-- Unraid 页面：`Settings / Lucky`
+- Unraid 页面：`Settings / Network Services / Lucky`
 - 日志文件：`/var/log/lucky.log`
 - PID 文件：`/var/run/lucky.pid`
+- 插件自动更新计划：`/etc/cron.d/lucky-plugin-update`
 
 ### 构建
 
@@ -73,6 +74,8 @@ dist/lucky-x86_64.plg
 - 提交生成后的插件产物。
 
 普通用户建议始终使用 `dist/lucky.plg` 的 raw URL 安装，这样 Unraid 后续可以通过插件更新机制发现新版。
+
+插件页面也提供 `Check Update` 和 `Install Update` 按钮。可以在页面里选择关闭、每天、每周或每月自动检查并安装插件更新。
 
 [Switch to English](#english)
 
@@ -119,9 +122,10 @@ dist/lucky-x86_64.plg
 - Lucky config directory: `/boot/config/plugins/lucky/luckyconf`
 - Plugin config file: `/boot/config/plugins/lucky/lucky.cfg`
 - rc script: `/etc/rc.d/rc.lucky`
-- Unraid page: `Settings / Lucky`
+- Unraid page: `Settings / Network Services / Lucky`
 - Log file: `/var/log/lucky.log`
 - PID file: `/var/run/lucky.pid`
+- Plugin auto-update schedule: `/etc/cron.d/lucky-plugin-update`
 
 ### Build
 
@@ -147,5 +151,7 @@ This repository includes a GitHub Actions workflow that checks Lucky upstream re
 - Commits the generated plugin artifacts.
 
 Users should install from the raw URL for `dist/lucky.plg` so Unraid can discover future plugin updates through its normal plugin update flow.
+
+The plugin page also provides `Check Update` and `Install Update` buttons. You can choose off, daily, weekly, or monthly automatic plugin update checks and installs from the page.
 
 [切换到中文](#中文)
