@@ -1,0 +1,51 @@
+name: Update Lucky
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - VERSION
+      - UPSTREAM_SHA256
+      - scripts/**
+      - source/**
+      - templates/**
+      - .github/workflows/update-lucky.yml
+  schedule:
+    - cron: "23 3 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Update upstream metadata
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: ./scripts/update-upstream.sh
+
+      - name: Build plugin
+        run: ./scripts/build-plugin.sh "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${GITHUB_REF_NAME}"
+
+      - name: Read version
+        id: version
+        run: echo "version=$(cat VERSION)" >> "$GITHUB_OUTPUT"
+
+      - name: Validate outputs
+        run: |
+          xmllint --noout dist/lucky.plg
+          xmllint --noout dist/lucky-x86_64.plg
+          bash -n scripts/build-plugin.sh source/etc/rc.d/rc.lucky source/install/doinst.sh source/usr/local/emhttp/plugins/lucky/event/started source/usr/local/emhttp/plugins/lucky/scripts/lucky-status
+          tar -tf "dist/packages/lucky-$(cat VERSION)-x86_64-1.txz" | grep -q 'usr/local/lucky/lucky'
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Update Lucky to ${{ steps.version.outputs.version }}"
+          file_pattern: VERSION UPSTREAM_SHA256 dist/lucky.plg dist/lucky-x86_64.plg dist/packages/*.txz
