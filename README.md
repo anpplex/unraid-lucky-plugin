@@ -4,7 +4,9 @@
 
 ## 中文
 
-这是一个传统 Unraid `.plg` 插件，用于直接安装并运行 Lucky 的 Linux x86_64 二进制程序。它不是 Docker 模板，也不会管理 Docker 容器。
+这是一个 Lucky 的 Unraid 插件，用于在 Unraid 上直接安装、运行和管理 Lucky，并通过 GitHub Actions 自动跟进 Lucky 上游版本，生成可由 Unraid 插件更新机制识别的新版本。
+
+Lucky 是一个面向家庭服务器和自托管场景的网络工具箱，常用功能包括端口转发、反向代理、动态域名解析、内网穿透、Wake-on-LAN、计划任务、WebDAV、证书管理等，适合在 Unraid 上统一管理常见网络服务入口。
 
 ### 上游信息
 
@@ -74,7 +76,9 @@ dist/lucky-x86_64.plg
 
 ## English
 
-This is a traditional Unraid `.plg` plugin for installing and running the Lucky Linux x86_64 binary directly. It is not a Docker template and does not manage Docker containers.
+This is an Unraid plugin for Lucky. It installs, runs, and manages Lucky directly on Unraid, and uses GitHub Actions to track upstream Lucky releases automatically so new plugin versions can be discovered through Unraid's normal plugin update flow.
+
+Lucky is a network toolbox for home servers and self-hosted environments. Common features include port forwarding, reverse proxy, DDNS, intranet tunneling, Wake-on-LAN, scheduled tasks, WebDAV, certificate management, and related entry-point management for network services.
 
 ### Upstream
 
