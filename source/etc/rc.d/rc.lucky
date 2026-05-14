@@ -1,0 +1,118 @@
+#!/bin/sh
+
+PLUGIN="lucky"
+CONFIG="/boot/config/plugins/${PLUGIN}/lucky.cfg"
+BIN="/usr/local/lucky/lucky"
+PID_FILE="/var/run/lucky.pid"
+LOG_FILE="/var/log/lucky.log"
+
+CONFIG_DIR="/boot/config/plugins/lucky/luckyconf"
+WEB_PORT="16601"
+AUTOSTART="yes"
+EXTRA_ARGS=""
+
+load_config() {
+  if [ -f "$CONFIG" ]; then
+    . "$CONFIG"
+  fi
+}
+
+is_running() {
+  if [ -f "$PID_FILE" ]; then
+    PID="$(cat "$PID_FILE" 2>/dev/null)"
+    if [ -n "$PID" ] && kill -0 "$PID" 2>/dev/null; then
+      return 0
+    fi
+  fi
+  return 1
+}
+
+start_lucky() {
+  load_config
+
+  if [ ! -x "$BIN" ]; then
+    echo "Lucky binary not found: $BIN" >&2
+    exit 1
+  fi
+
+  if is_running; then
+    echo "Lucky is already running with PID $(cat "$PID_FILE")."
+    return 0
+  fi
+
+  mkdir -p "$CONFIG_DIR"
+  touch "$LOG_FILE"
+
+  cd /usr/local/lucky || exit 1
+  nohup "$BIN" -cd "$CONFIG_DIR" $EXTRA_ARGS >> "$LOG_FILE" 2>&1 &
+  echo $! > "$PID_FILE"
+  sleep 1
+
+  if is_running; then
+    echo "Lucky started with PID $(cat "$PID_FILE")."
+  else
+    echo "Lucky failed to start. Check $LOG_FILE." >&2
+    exit 1
+  fi
+}
+
+stop_lucky() {
+  if ! is_running; then
+    echo "Lucky is not running."
+    rm -f "$PID_FILE"
+    return 0
+  fi
+
+  PID="$(cat "$PID_FILE")"
+  kill "$PID" 2>/dev/null || true
+
+  COUNT=0
+  while kill -0 "$PID" 2>/dev/null && [ "$COUNT" -lt 15 ]; do
+    sleep 1
+    COUNT=$((COUNT + 1))
+  done
+
+  if kill -0 "$PID" 2>/dev/null; then
+    kill -9 "$PID" 2>/dev/null || true
+  fi
+
+  rm -f "$PID_FILE"
+  echo "Lucky stopped."
+}
+
+status_lucky() {
+  load_config
+  if is_running; then
+    echo "running"
+    echo "pid=$(cat "$PID_FILE")"
+    echo "config_dir=$CONFIG_DIR"
+    echo "web_port=$WEB_PORT"
+  else
+    echo "stopped"
+    echo "config_dir=$CONFIG_DIR"
+    echo "web_port=$WEB_PORT"
+  fi
+}
+
+case "${1:-status}" in
+  start)
+    start_lucky
+    ;;
+  stop)
+    stop_lucky
+    ;;
+  restart)
+    stop_lucky
+    start_lucky
+    ;;
+  status)
+    status_lucky
+    ;;
+  logs)
+    tail -n "${2:-200}" "$LOG_FILE" 2>/dev/null || true
+    ;;
+  *)
+    echo "usage: $0 {start|stop|restart|status|logs}" >&2
+    exit 2
+    ;;
+esac
