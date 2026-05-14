@@ -16,6 +16,7 @@ Lucky 是一个面向家庭服务器和自托管场景的网络工具箱，常�
 - 启动命令：`lucky -cd <配置目录>`
 - 默认 Web UI：`http://<unraid-ip>:16601`
 - 默认账号密码：`666 / 666`
+- 插件图标来源：https://cdn.jsdelivr.net/gh/IceWhaleTech/CasaOS-AppStore@main/Apps/Lucky/icon.png
 
 ### 安装方式
 
@@ -67,6 +68,7 @@ dist/lucky-x86_64.plg
 - 下载最新 `Linux_x86_64` 二进制包。
 - 计算并更新 `UPSTREAM_SHA256`。
 - 更新 `VERSION`。
+- 更新 `PLUGIN_VERSION`。
 - 重新生成 `dist/lucky.plg`、`dist/lucky-x86_64.plg` 和 `dist/packages/*.txz`。
 - 提交生成后的插件产物。
 
@@ -88,6 +90,7 @@ Lucky is a network toolbox for home servers and self-hosted environments. Common
 - Runtime command: `lucky -cd <config-dir>`
 - Default Web UI: `http://<unraid-ip>:16601`
 - Default login: `666 / 666`
+- Plugin icon source: https://cdn.jsdelivr.net/gh/IceWhaleTech/CasaOS-AppStore@main/Apps/Lucky/icon.png
 
 ### Installation
 
@@ -139,6 +142,7 @@ This repository includes a GitHub Actions workflow that checks Lucky upstream re
 - Downloads the latest `Linux_x86_64` binary archive.
 - Calculates and updates `UPSTREAM_SHA256`.
 - Updates `VERSION`.
+- Updates `PLUGIN_VERSION`.
 - Rebuilds `dist/lucky.plg`, `dist/lucky-x86_64.plg`, and `dist/packages/*.txz`.
 - Commits the generated plugin artifacts.
 
