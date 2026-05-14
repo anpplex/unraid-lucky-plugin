@@ -2,7 +2,7 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name "lucky">
 <!ENTITY author "Codex">
-<!ENTITY version "2.27.2">
+<!ENTITY version "@PLUGIN_VERSION@">
 <!ENTITY launch "Settings/Lucky">
 ]>
 <PLUGIN name="&name;"
@@ -11,16 +11,17 @@
         launch="&launch;">
 
   <CHANGES>
-## 2.27.2
+## @PLUGIN_VERSION@
 
 - Install Lucky 2.27.2 Linux x86_64 binary directly.
+- Fix Unraid Settings page CSRF token handling.
 - Add persistent runtime configuration under /boot/config/plugins/lucky.
 - Add array-start autostart event hook.
   </CHANGES>
 
   <FILE Name="/boot/config/plugins/&name;/lucky-&version;-x86_64-1.txz" Run="upgradepkg --install-new">
     <URL>https://raw.githubusercontent.com/anpplex/unraid-lucky-plugin/main/dist/packages/lucky-2.27.2-x86_64-1.txz</URL>
-    <MD5>c55e49aa1c947b06c6c2af1f8f8c2d60</MD5>
+    <MD5>a94189534fb7549495d6ab0f729d3438</MD5>
   </FILE>
 
   <FILE Run="/bin/bash">
