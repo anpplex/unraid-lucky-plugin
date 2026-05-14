@@ -173,7 +173,7 @@ sed \
 <?xml version="1.0" standalone="yes"?>
 <!DOCTYPE PLUGIN [
 <!ENTITY name "lucky">
-<!ENTITY author "Codex">
+<!ENTITY author "Apex">
 <!ENTITY version "$PLUGIN_VERSION">
 <!ENTITY launch "Settings/Lucky">
 ]>
@@ -186,7 +186,7 @@ sed \
 ## $PLUGIN_VERSION
 
 - Install Lucky ${VERSION} Linux x86_64 binary directly.
-- Fix Unraid Settings page CSRF token handling.
+- Add Lucky runtime controls, update controls, and a compact plugin summary.
 - Add persistent runtime configuration under /boot/config/plugins/lucky.
 - Add array-start autostart event hook.
   </CHANGES>

@@ -1,6 +1,237 @@
-Author="anpplex"
-Version="2.27.2.4"
+Author="Apex"
+Version="2.27.2.5"
 Title="Lucky"
 Menu="NetworkServices"
 Icon="lucky.png"
-Type="menu"
+Type="php"
+---
+<?php
+$plugin = 'lucky';
+$configFile = "/boot/config/plugins/$plugin/lucky.cfg";
+$defaultsFile = "/usr/local/emhttp/plugins/$plugin/defaults/lucky.cfg";
+$rc = '/etc/rc.d/rc.lucky';
+$statusScript = "/usr/local/emhttp/plugins/$plugin/scripts/lucky-status";
+$updateScript = "/usr/local/emhttp/plugins/$plugin/scripts/lucky-plugin-update";
+$scheduleScript = "/usr/local/emhttp/plugins/$plugin/scripts/lucky-update-schedule";
+$message = '';
+$logs = '';
+$updateOutput = '';
+global $var;
+$csrfToken = $var['csrf_token'] ?? '';
+
+function lucky_parse_config($file) {
+  $config = [];
+  if (!is_file($file)) {
+    return $config;
+  }
+  foreach (file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+    if ($line === '' || $line[0] === '#') {
+      continue;
+    }
+    if (strpos($line, '=') === false) {
+      continue;
+    }
+    [$key, $value] = explode('=', $line, 2);
+    $value = trim($value);
+    if (strlen($value) >= 2 && $value[0] === '"' && substr($value, -1) === '"') {
+      $value = stripcslashes(substr($value, 1, -1));
+    }
+    $config[$key] = $value;
+  }
+  return $config;
+}
+
+function lucky_write_config($file, $config) {
+  $ordered = ['CONFIG_DIR', 'WEB_PORT', 'AUTOSTART', 'EXTRA_ARGS', 'UPDATE_INTERVAL'];
+  $lines = [];
+  foreach ($ordered as $key) {
+    $value = $config[$key] ?? '';
+    $safe = addcslashes($value, "\\\"");
+    $lines[] = $key . '="' . $safe . '"';
+  }
+  if (!is_dir(dirname($file))) {
+    mkdir(dirname($file), 0755, true);
+  }
+  file_put_contents($file, implode("\n", $lines) . "\n");
+}
+
+function lucky_apply_update_schedule($script) {
+  if (!is_executable($script)) {
+    return '';
+  }
+  return shell_exec(escapeshellcmd($script) . ' apply 2>&1') ?: '';
+}
+
+function lucky_run($action) {
+  global $rc;
+  $allowed = ['start', 'stop', 'restart', 'status', 'logs'];
+  if (!in_array($action, $allowed, true)) {
+    return 'Unknown action.';
+  }
+  return shell_exec(escapeshellcmd($rc) . ' ' . escapeshellarg($action) . ' 2>&1') ?: '';
+}
+
+function lucky_update($script, $action) {
+  $allowed = ['check', 'install'];
+  if (!in_array($action, $allowed, true)) {
+    return 'Unknown update action.';
+  }
+  if (!is_executable($script)) {
+    return 'Update script is not available.';
+  }
+  return shell_exec(escapeshellcmd($script) . ' ' . escapeshellarg($action) . ' 2>&1') ?: '';
+}
+
+function lucky_status($script) {
+  $status = [];
+  if (!is_executable($script)) {
+    return $status;
+  }
+  $output = shell_exec(escapeshellcmd($script) . ' 2>/dev/null') ?: '';
+  foreach (explode("\n", trim($output)) as $line) {
+    if (strpos($line, '=') !== false) {
+      [$key, $value] = explode('=', $line, 2);
+      $status[$key] = $value;
+    }
+  }
+  return $status;
+}
+
+function lucky_h($value) {
+  return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
+}
+
+$defaults = lucky_parse_config($defaultsFile);
+$config = array_merge($defaults, lucky_parse_config($configFile));
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  $action = $_POST['action'] ?? '';
+
+  if ($action === 'save') {
+    $config['CONFIG_DIR'] = trim($_POST['CONFIG_DIR'] ?? $config['CONFIG_DIR']);
+    $config['WEB_PORT'] = preg_replace('/[^0-9]/', '', $_POST['WEB_PORT'] ?? $config['WEB_PORT']);
+    $config['AUTOSTART'] = ($_POST['AUTOSTART'] ?? 'no') === 'yes' ? 'yes' : 'no';
+    $config['EXTRA_ARGS'] = trim($_POST['EXTRA_ARGS'] ?? '');
+    $interval = $_POST['UPDATE_INTERVAL'] ?? ($config['UPDATE_INTERVAL'] ?? 'off');
+    $config['UPDATE_INTERVAL'] = in_array($interval, ['off', 'daily', 'weekly', 'monthly'], true) ? $interval : 'off';
+    if ($config['WEB_PORT'] === '') {
+      $config['WEB_PORT'] = '16601';
+    }
+    lucky_write_config($configFile, $config);
+    lucky_apply_update_schedule($scheduleScript);
+    $message = 'Settings saved.';
+  } elseif (in_array($action, ['start', 'stop', 'restart'], true)) {
+    $message = lucky_run($action);
+  } elseif ($action === 'logs') {
+    $logs = lucky_run('logs');
+  } elseif (in_array($action, ['check_update', 'install_update'], true)) {
+    $updateOutput = lucky_update($updateScript, $action === 'install_update' ? 'install' : 'check');
+  }
+}
+
+$status = lucky_status($statusScript);
+$running = ($status['running'] ?? 'no') === 'yes';
+$host = $_SERVER['HTTP_HOST'] ?? ($_SERVER['SERVER_NAME'] ?? 'tower');
+$host = preg_replace('/:\d+$/', '', $host);
+$webUrl = 'http://' . $host . ':' . ($config['WEB_PORT'] ?? '16601');
+?>
+
+<style>
+.lucky-wrap { max-width: 960px; }
+.lucky-hero { display: flex; gap: 16px; align-items: center; margin: 8px 0 18px; }
+.lucky-logo { width: 56px; height: 56px; }
+.lucky-title { margin: 0; font-size: 22px; }
+.lucky-subtitle { margin: 4px 0 0; color: #777; }
+.lucky-status { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin: 12px 0 18px; }
+.lucky-pill { padding: 4px 10px; border-radius: 999px; font-weight: 600; color: #fff; background: #9b2c2c; }
+.lucky-pill.running { background: #298a43; }
+.lucky-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.lucky-output { width: 100%; min-height: 120px; white-space: pre-wrap; font-family: monospace; }
+.lucky-table input[type="text"], .lucky-table select { min-width: 420px; }
+.lucky-section { margin-top: 18px; }
+.lucky-section h3 { margin: 0 0 10px; font-size: 16px; }
+</style>
+
+<div class="lucky-wrap">
+  <div class="lucky-hero">
+    <img class="lucky-logo" src="/plugins/lucky/lucky.png" alt="Lucky">
+    <div>
+      <h2 class="lucky-title">Lucky</h2>
+      <p class="lucky-subtitle">Network toolbox for Unraid</p>
+    </div>
+  </div>
+
+  <div class="lucky-status">
+    <span class="lucky-pill <?= $running ? 'running' : '' ?>"><?= $running ? 'Running' : 'Stopped' ?></span>
+    <span>PID: <strong><?= lucky_h($status['pid'] ?? '') ?></strong></span>
+    <span>Binary: <strong><?= lucky_h($status['binary_exists'] ?? 'no') ?></strong></span>
+    <a class="button" href="<?= lucky_h($webUrl) ?>">Open Web UI</a>
+  </div>
+
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="<?= lucky_h($csrfToken) ?>">
+    <input type="hidden" name="action" value="save">
+    <table class="lucky-table">
+      <tr>
+        <td>Config directory</td>
+        <td><input type="text" name="CONFIG_DIR" value="<?= lucky_h($config['CONFIG_DIR'] ?? '/boot/config/plugins/lucky/luckyconf') ?>"></td>
+      </tr>
+      <tr>
+        <td>Web UI port</td>
+        <td><input type="text" name="WEB_PORT" value="<?= lucky_h($config['WEB_PORT'] ?? '16601') ?>"></td>
+      </tr>
+      <tr>
+        <td>Autostart with array</td>
+        <td>
+          <select name="AUTOSTART">
+            <option value="yes" <?= ($config['AUTOSTART'] ?? 'yes') === 'yes' ? 'selected' : '' ?>>yes</option>
+            <option value="no" <?= ($config['AUTOSTART'] ?? 'yes') === 'no' ? 'selected' : '' ?>>no</option>
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <td>Extra arguments</td>
+        <td><input type="text" name="EXTRA_ARGS" value="<?= lucky_h($config['EXTRA_ARGS'] ?? '') ?>"></td>
+      </tr>
+      <tr>
+        <td>Plugin update interval</td>
+        <td>
+          <select name="UPDATE_INTERVAL">
+            <option value="off" <?= ($config['UPDATE_INTERVAL'] ?? 'off') === 'off' ? 'selected' : '' ?>>off</option>
+            <option value="daily" <?= ($config['UPDATE_INTERVAL'] ?? 'off') === 'daily' ? 'selected' : '' ?>>daily</option>
+            <option value="weekly" <?= ($config['UPDATE_INTERVAL'] ?? 'off') === 'weekly' ? 'selected' : '' ?>>weekly</option>
+            <option value="monthly" <?= ($config['UPDATE_INTERVAL'] ?? 'off') === 'monthly' ? 'selected' : '' ?>>monthly</option>
+          </select>
+        </td>
+      </tr>
+    </table>
+    <p><input type="submit" value="Save"></p>
+  </form>
+
+  <form method="post" class="lucky-actions">
+    <input type="hidden" name="csrf_token" value="<?= lucky_h($csrfToken) ?>">
+    <button type="submit" name="action" value="start">Start</button>
+    <button type="submit" name="action" value="stop">Stop</button>
+    <button type="submit" name="action" value="restart">Restart</button>
+    <button type="submit" name="action" value="logs">Show Logs</button>
+  </form>
+
+  <div class="lucky-section">
+    <h3>Plugin Update</h3>
+    <form method="post" class="lucky-actions">
+      <input type="hidden" name="csrf_token" value="<?= lucky_h($csrfToken) ?>">
+      <button type="submit" name="action" value="check_update">Check Update</button>
+      <button type="submit" name="action" value="install_update">Install Update</button>
+    </form>
+  </div>
+
+  <?php if ($message !== ''): ?>
+    <textarea class="lucky-output" readonly><?= lucky_h(trim($message)) ?></textarea>
+  <?php endif; ?>
+  <?php if ($updateOutput !== ''): ?>
+    <textarea class="lucky-output" readonly><?= lucky_h(trim($updateOutput)) ?></textarea>
+  <?php endif; ?>
+  <?php if ($logs !== ''): ?>
+    <textarea class="lucky-output" readonly><?= lucky_h(trim($logs)) ?></textarea>
+  <?php endif; ?>
+</div>
