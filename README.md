@@ -77,7 +77,7 @@ dist/lucky-x86_64.plg
 
 普通用户建议始终使用 `dist/lucky.plg` 的 raw URL 安装，这样 Unraid 后续可以通过插件更新机制发现新版。
 
-插件页面也提供 `Check Update` 和 `Install Update` 按钮。可以在页面里选择关闭、每天、每周或每月自动检查并安装插件更新。
+插件页面提供 GitHub 插件更新和 Lucky 主程序更新两组按钮。可以在页面里选择关闭、每天、每周或每月自动检查并安装插件与上游 Lucky 主程序更新。
 
 [Switch to English](#english)
 
@@ -156,6 +156,6 @@ This repository includes a GitHub Actions workflow that checks Lucky upstream re
 
 Users should install from the raw URL for `dist/lucky.plg` so Unraid can discover future plugin updates through its normal plugin update flow.
 
-The plugin page also provides `Check Update` and `Install Update` buttons. You can choose off, daily, weekly, or monthly automatic plugin update checks and installs from the page.
+The plugin page provides separate controls for GitHub plugin updates and upstream Lucky binary updates. You can choose off, daily, weekly, or monthly automatic checks and installs for both the plugin and upstream Lucky binary.
 
 [切换到中文](#中文)

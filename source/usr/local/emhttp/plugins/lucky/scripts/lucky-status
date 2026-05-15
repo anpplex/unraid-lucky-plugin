@@ -8,6 +8,7 @@ WEB_PORT="16601"
 AUTOSTART="array"
 UI_LANG="zh"
 UPDATE_INTERVAL="off"
+UPSTREAM_VERSION_FILE="/usr/local/emhttp/plugins/lucky/VERSION"
 
 if [ -f "$CONFIG" ]; then
   . "$CONFIG"
@@ -26,6 +27,11 @@ echo "web_port=$WEB_PORT"
 echo "autostart=$AUTOSTART"
 echo "ui_lang=$UI_LANG"
 echo "update_interval=$UPDATE_INTERVAL"
+if [ -s "$UPSTREAM_VERSION_FILE" ]; then
+  echo "upstream_version=$(sed -n '1p' "$UPSTREAM_VERSION_FILE")"
+else
+  echo "upstream_version="
+fi
 
 if [ -f "$PID_FILE" ]; then
   PID="$(cat "$PID_FILE" 2>/dev/null)"

@@ -25,8 +25,18 @@ chmod 0755 /etc/rc.d/rc.lucky
 chmod 0755 /usr/local/emhttp/plugins/lucky/event/started
 chmod 0755 /usr/local/emhttp/plugins/lucky/scripts/lucky-status
 chmod 0755 /usr/local/emhttp/plugins/lucky/scripts/lucky-plugin-update
+chmod 0755 /usr/local/emhttp/plugins/lucky/scripts/lucky-upstream-update
 chmod 0755 /usr/local/emhttp/plugins/lucky/scripts/lucky-update-schedule
 /usr/local/emhttp/plugins/lucky/scripts/lucky-update-schedule apply >/dev/null 2>&1 || true
+
+if [ -x /boot/config/plugins/lucky/upstream/lucky ]; then
+  cp /boot/config/plugins/lucky/upstream/lucky /usr/local/lucky/lucky
+  chmod 0755 /usr/local/lucky/lucky
+fi
+
+if [ -s /boot/config/plugins/lucky/upstream/VERSION ]; then
+  cp /boot/config/plugins/lucky/upstream/VERSION /usr/local/emhttp/plugins/lucky/VERSION
+fi
 
 if [ "$AUTOSTART" = "boot" ] && [ -x /etc/rc.d/rc.lucky ]; then
   /etc/rc.d/rc.lucky start >/dev/null 2>&1 &

@@ -1,0 +1,137 @@
+#!/bin/sh
+
+API_URL="${LUCKY_RELEASE_API:-https://api.github.com/repos/gdy666/lucky/releases/latest}"
+LATEST_URL="${LUCKY_RELEASE_LATEST_URL:-https://github.com/gdy666/lucky/releases/latest}"
+MIRROR_BASE="${LUCKY_RELEASE_MIRROR_BASE:-https://release.66666.host}"
+BIN="/usr/local/lucky/lucky"
+RUNTIME_VERSION_FILE="/usr/local/emhttp/plugins/lucky/VERSION"
+OVERRIDE_DIR="/boot/config/plugins/lucky/upstream"
+OVERRIDE_BIN="$OVERRIDE_DIR/lucky"
+OVERRIDE_VERSION_FILE="$OVERRIDE_DIR/VERSION"
+OVERRIDE_SHA256_FILE="$OVERRIDE_DIR/SHA256"
+LOG_FILE="/var/log/lucky-plugin-update.log"
+
+log() {
+  mkdir -p "$(dirname "$LOG_FILE")"
+  LINE="$(printf '%s %s' "$(date '+%Y-%m-%d %H:%M:%S')" "$*")"
+  printf '%s\n' "$LINE"
+  (printf '%s\n' "$LINE" >> "$LOG_FILE") 2>/dev/null || true
+  return 0
+}
+
+version_gt() {
+  [ "$1" != "$2" ] || return 1
+  [ "$(printf '%s\n%s\n' "$2" "$1" | sort -V | tail -n 1)" = "$1" ]
+}
+
+current_version() {
+  if [ -s "$OVERRIDE_VERSION_FILE" ]; then
+    sed -n '1p' "$OVERRIDE_VERSION_FILE"
+    return
+  fi
+  if [ -s "$RUNTIME_VERSION_FILE" ]; then
+    sed -n '1p' "$RUNTIME_VERSION_FILE"
+    return
+  fi
+  echo "0"
+}
+
+latest_version() {
+  TAG="$(curl -fsSL --connect-timeout 20 --max-time 60 "$API_URL" 2>/dev/null | sed -n 's/^[[:space:]]*"tag_name":[[:space:]]*"\([^"]*\)".*/\1/p' | head -n 1)"
+  if [ -n "$TAG" ]; then
+    TAG="${TAG#v}"
+    printf '%s\n' "$TAG"
+    return 0
+  fi
+
+  EFFECTIVE_URL="$(curl -fsSL --connect-timeout 20 --max-time 60 -o /dev/null -w '%{url_effective}' "$LATEST_URL" 2>/dev/null)" || return 1
+  TAG="${EFFECTIVE_URL##*/}"
+  TAG="${TAG#v}"
+  [ -n "$TAG" ] && [ "$TAG" != "latest" ] || return 1
+  printf '%s\n' "$TAG"
+}
+
+sha256_file() {
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$1" | awk '{print $1}'
+  else
+    shasum -a 256 "$1" | awk '{print $1}'
+  fi
+}
+
+download_archive() {
+  VERSION="$1"
+  ARCHIVE="$2"
+  ASSET="lucky_${VERSION}_Linux_x86_64.tar.gz"
+  MIRROR_URL="$MIRROR_BASE/v${VERSION}/${VERSION}_lucky/$ASSET"
+  GITHUB_URL="https://github.com/gdy666/lucky/releases/download/v${VERSION}/$ASSET"
+
+  rm -f "$ARCHIVE"
+  for URL in "$MIRROR_URL" "$GITHUB_URL"; do
+    log "Downloading Lucky upstream archive: $URL"
+    DOWNLOAD_OUTPUT="$(curl -fL --connect-timeout 20 --max-time 180 -o "$ARCHIVE" "$URL" 2>&1)"
+    DOWNLOAD_STATUS=$?
+    [ -n "$DOWNLOAD_OUTPUT" ] && printf '%s\n' "$DOWNLOAD_OUTPUT" | tee -a "$LOG_FILE"
+    if [ "$DOWNLOAD_STATUS" -eq 0 ]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+ACTION="${1:-check}"
+CURRENT="$(current_version)"
+LATEST="$(latest_version)" || {
+  log "Failed to resolve latest Lucky upstream version."
+  exit 1
+}
+
+case "$ACTION" in
+  check)
+    if version_gt "$LATEST" "$CURRENT"; then
+      log "Lucky upstream update available: $CURRENT -> $LATEST"
+    else
+      log "Lucky upstream is up to date: $CURRENT"
+    fi
+    ;;
+  install)
+    if ! version_gt "$LATEST" "$CURRENT"; then
+      log "Lucky upstream is up to date: $CURRENT"
+      exit 0
+    fi
+
+    TMP_DIR="$(mktemp -d /tmp/lucky-upstream.XXXXXX)" || exit 1
+    ARCHIVE="$TMP_DIR/lucky_${LATEST}_Linux_x86_64.tar.gz"
+    if ! download_archive "$LATEST" "$ARCHIVE"; then
+      log "Failed to download Lucky upstream $LATEST."
+      rm -rf "$TMP_DIR"
+      exit 1
+    fi
+
+    SHA256="$(sha256_file "$ARCHIVE")"
+    tar -xzf "$ARCHIVE" -C "$TMP_DIR" lucky LICENSE scripts
+    if [ ! -x "$TMP_DIR/lucky" ]; then
+      log "Lucky upstream archive did not contain an executable lucky binary."
+      rm -rf "$TMP_DIR"
+      exit 1
+    fi
+
+    log "Installing Lucky upstream binary: $CURRENT -> $LATEST"
+    /etc/rc.d/rc.lucky stop 2>&1 | tee -a "$LOG_FILE" || true
+    mkdir -p /usr/local/lucky "$OVERRIDE_DIR"
+    cp "$TMP_DIR/lucky" "$BIN"
+    cp "$TMP_DIR/lucky" "$OVERRIDE_BIN"
+    chmod 0755 "$BIN" "$OVERRIDE_BIN"
+    printf '%s\n' "$LATEST" > "$OVERRIDE_VERSION_FILE"
+    printf '%s\n' "$SHA256" > "$OVERRIDE_SHA256_FILE"
+    printf '%s\n' "$LATEST" > "$RUNTIME_VERSION_FILE"
+    ln -sf "$BIN" /usr/local/sbin/lucky
+    /etc/rc.d/rc.lucky start 2>&1 | tee -a "$LOG_FILE"
+    log "Lucky service started after upstream update."
+    rm -rf "$TMP_DIR"
+    ;;
+  *)
+    echo "usage: $0 {check|install}" >&2
+    exit 2
+    ;;
+esac

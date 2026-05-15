@@ -3,6 +3,15 @@
 PLUGIN_URL="${LUCKY_PLUGIN_URL:-https://raw.githubusercontent.com/anpplex/unraid-lucky-plugin/main/dist/lucky.plg}"
 LOCAL_PAGE="/usr/local/emhttp/plugins/lucky/Lucky.page"
 TMP_PLG="/tmp/lucky-latest.plg"
+LOG_FILE="/var/log/lucky-plugin-update.log"
+
+log() {
+  mkdir -p "$(dirname "$LOG_FILE")"
+  LINE="$(printf '%s %s' "$(date '+%Y-%m-%d %H:%M:%S')" "$*")"
+  printf '%s\n' "$LINE"
+  (printf '%s\n' "$LINE" >> "$LOG_FILE") 2>/dev/null || true
+  return 0
+}
 
 current_version() {
   sed -n 's/^Version="\([^"]*\)".*/\1/p' "$LOCAL_PAGE" 2>/dev/null | head -n 1
@@ -27,13 +36,13 @@ CURRENT="$(current_version)"
 CURRENT="${CURRENT:-0}"
 
 if ! download_plg; then
-  echo "Failed to download Lucky plugin metadata: $PLUGIN_URL"
+  log "Failed to download Lucky plugin metadata: $PLUGIN_URL"
   exit 1
 fi
 
 LATEST="$(latest_version)"
 if [ -z "$LATEST" ]; then
-  echo "Failed to parse latest Lucky plugin version."
+  log "Failed to parse latest Lucky plugin version."
   rm -f "$TMP_PLG"
   exit 1
 fi
@@ -41,17 +50,28 @@ fi
 case "$ACTION" in
   check)
     if version_gt "$LATEST" "$CURRENT"; then
-      echo "Update available: $CURRENT -> $LATEST"
+      log "Lucky plugin update available: $CURRENT -> $LATEST"
     else
-      echo "Lucky plugin is up to date: $CURRENT"
+      log "Lucky plugin is up to date: $CURRENT"
     fi
     ;;
   install)
     if version_gt "$LATEST" "$CURRENT"; then
-      echo "Installing Lucky plugin update: $CURRENT -> $LATEST"
-      installplg "$PLUGIN_URL"
+      log "Installing Lucky plugin update: $CURRENT -> $LATEST"
+      INSTALL_OUTPUT="$(installplg "$PLUGIN_URL" 2>&1)"
+      INSTALL_STATUS=$?
+      printf '%s\n' "$INSTALL_OUTPUT" | tee -a "$LOG_FILE"
+      if [ "$INSTALL_STATUS" -ne 0 ]; then
+        log "Lucky plugin update failed with status $INSTALL_STATUS."
+        rm -f "$TMP_PLG"
+        exit "$INSTALL_STATUS"
+      fi
+      if [ -x /etc/rc.d/rc.lucky ]; then
+        /etc/rc.d/rc.lucky restart 2>&1 | tee -a "$LOG_FILE" || /etc/rc.d/rc.lucky start 2>&1 | tee -a "$LOG_FILE" || true
+        log "Lucky service started after plugin update."
+      fi
     else
-      echo "Lucky plugin is up to date: $CURRENT"
+      log "Lucky plugin is up to date: $CURRENT"
     fi
     ;;
   *)

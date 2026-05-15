@@ -12,13 +12,13 @@ mkdir -p "$(dirname "$CRON_FILE")"
 
 case "$UPDATE_INTERVAL" in
   daily)
-    echo '17 4 * * * root /usr/local/emhttp/plugins/lucky/scripts/lucky-plugin-update install >> /var/log/lucky-plugin-update.log 2>&1' > "$CRON_FILE"
+    echo '17 4 * * * root /usr/local/emhttp/plugins/lucky/scripts/lucky-plugin-update install >> /var/log/lucky-plugin-update.log 2>&1; /usr/local/emhttp/plugins/lucky/scripts/lucky-upstream-update install >> /var/log/lucky-plugin-update.log 2>&1' > "$CRON_FILE"
     ;;
   weekly)
-    echo '23 4 * * 1 root /usr/local/emhttp/plugins/lucky/scripts/lucky-plugin-update install >> /var/log/lucky-plugin-update.log 2>&1' > "$CRON_FILE"
+    echo '23 4 * * 1 root /usr/local/emhttp/plugins/lucky/scripts/lucky-plugin-update install >> /var/log/lucky-plugin-update.log 2>&1; /usr/local/emhttp/plugins/lucky/scripts/lucky-upstream-update install >> /var/log/lucky-plugin-update.log 2>&1' > "$CRON_FILE"
     ;;
   monthly)
-    echo '29 4 1 * * root /usr/local/emhttp/plugins/lucky/scripts/lucky-plugin-update install >> /var/log/lucky-plugin-update.log 2>&1' > "$CRON_FILE"
+    echo '29 4 1 * * root /usr/local/emhttp/plugins/lucky/scripts/lucky-plugin-update install >> /var/log/lucky-plugin-update.log 2>&1; /usr/local/emhttp/plugins/lucky/scripts/lucky-upstream-update install >> /var/log/lucky-plugin-update.log 2>&1' > "$CRON_FILE"
     ;;
   off|*)
     rm -f "$CRON_FILE"
