@@ -48,7 +48,7 @@ dist/lucky-x86_64.plg
 - Unraid 页面：`Settings / Network Services / Lucky`
 - 日志文件：`/var/log/lucky.log`
 - PID 文件：`/var/run/lucky.pid`
-- 插件自动更新计划：`/etc/cron.d/lucky-plugin-update`
+- Lucky 主程序自动更新计划：`/etc/cron.d/lucky-upstream-update`
 - Lucky 自动启动模式：`boot` 为 Unraid 开机启动，`array` 为阵列启动后启动，`no` 为关闭自动启动。
 - 插件页面语言：默认中文，可在 Lucky 页面切换中文/English。
 
@@ -77,7 +77,7 @@ dist/lucky-x86_64.plg
 
 普通用户建议始终使用 `dist/lucky.plg` 的 raw URL 安装，这样 Unraid 后续可以通过插件更新机制发现新版。
 
-插件页面提供 GitHub 插件更新和 Lucky 主程序更新两组按钮。可以在页面里选择关闭、每天、每周或每月自动检查并安装插件与上游 Lucky 主程序更新。
+插件页面只保留 Lucky 主程序更新按钮。可以在页面里选择关闭、每天、每周或每月自动检查并安装上游 Lucky 主程序更新；插件本身仍通过 Unraid 插件页和 `pluginURL` 元数据发现更新。
 
 [Switch to English](#english)
 
@@ -127,7 +127,7 @@ dist/lucky-x86_64.plg
 - Unraid page: `Settings / Network Services / Lucky`
 - Log file: `/var/log/lucky.log`
 - PID file: `/var/run/lucky.pid`
-- Plugin auto-update schedule: `/etc/cron.d/lucky-plugin-update`
+- Lucky upstream auto-update schedule: `/etc/cron.d/lucky-upstream-update`
 - Lucky startup mode: `boot` starts with Unraid boot, `array` starts after the array starts, and `no` disables autostart.
 - Plugin page language: defaults to Chinese and can switch between Chinese and English on the Lucky page.
 
@@ -156,6 +156,6 @@ This repository includes a GitHub Actions workflow that checks Lucky upstream re
 
 Users should install from the raw URL for `dist/lucky.plg` so Unraid can discover future plugin updates through its normal plugin update flow.
 
-The plugin page provides separate controls for GitHub plugin updates and upstream Lucky binary updates. You can choose off, daily, weekly, or monthly automatic checks and installs for both the plugin and upstream Lucky binary.
+The plugin page only keeps upstream Lucky binary update controls. You can choose off, daily, weekly, or monthly automatic checks and installs for the upstream Lucky binary; the plugin itself still uses Unraid's plugin page and `pluginURL` metadata for plugin update discovery.
 
 [切换到中文](#中文)
