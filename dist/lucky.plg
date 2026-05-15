@@ -2,7 +2,7 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name "lucky">
 <!ENTITY author "Apex">
-<!ENTITY version "2.27.2.10">
+<!ENTITY version "2.27.2.11">
 <!ENTITY pluginURL "https://raw.githubusercontent.com/anpplex/unraid-lucky-plugin/main/dist/lucky.plg">
 <!ENTITY launch "Settings/Lucky">
 ]>
@@ -13,7 +13,7 @@
         launch="&launch;">
 
   <CHANGES>
-## 2.27.2.10
+## 2.27.2.11
 
 - Install Lucky 2.27.2 Linux x86_64 binary directly.
 - Add Lucky runtime controls, update controls, and a compact plugin summary.
@@ -23,11 +23,12 @@
 - Refine Chinese autostart option labels.
 - Add pluginURL metadata so Unraid can check plugin updates.
 - Add separate GitHub plugin and Lucky upstream update controls with live logs.
+- Move page actions to a dedicated plugin API endpoint so service controls work reliably.
   </CHANGES>
 
   <FILE Name="/boot/config/plugins/&name;/lucky-&version;-x86_64-1.txz" Run="upgradepkg --install-new">
-    <URL>https://raw.githubusercontent.com/anpplex/unraid-lucky-plugin/main/dist/packages/lucky-2.27.2.10-x86_64-1.txz</URL>
-    <MD5>aae315a41ff755d4dbab3746c02dea7d</MD5>
+    <URL>https://raw.githubusercontent.com/anpplex/unraid-lucky-plugin/main/dist/packages/lucky-2.27.2.11-x86_64-1.txz</URL>
+    <MD5>db2b51e4b68d296fbabcdce0d96d2e51</MD5>
   </FILE>
 
   <FILE Run="/bin/bash">
