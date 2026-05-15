@@ -1,0 +1,80 @@
+#!/bin/sh
+
+PLUGIN="lucky"
+RC="/etc/rc.d/rc.lucky"
+PLUGIN_UPDATE="/usr/local/emhttp/plugins/${PLUGIN}/scripts/lucky-plugin-update"
+UPSTREAM_UPDATE="/usr/local/emhttp/plugins/${PLUGIN}/scripts/lucky-upstream-update"
+LOG_FILE="/var/log/lucky-control.log"
+LOCK_DIR="/var/run/lucky-control.lock"
+
+log() {
+  mkdir -p "$(dirname "$LOG_FILE")"
+  printf '%s %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" | tee -a "$LOG_FILE"
+}
+
+run_rc_action() {
+  ACTION="$1"
+  if [ ! -x "$RC" ]; then
+    log "Lucky rc script is not available: $RC"
+    return 1
+  fi
+
+  log "Running Lucky service action: $ACTION"
+  "$RC" "$ACTION" >> "$LOG_FILE" 2>&1
+  STATUS=$?
+  log "Lucky service action finished: $ACTION status=$STATUS"
+  "$RC" status >> "$LOG_FILE" 2>&1 || true
+  return "$STATUS"
+}
+
+run_update_action() {
+  SCRIPT="$1"
+  ARG="$2"
+  LABEL="$3"
+
+  if [ ! -x "$SCRIPT" ]; then
+    log "$LABEL script is not available: $SCRIPT"
+    return 1
+  fi
+
+  log "Running $LABEL action: $ARG"
+  "$SCRIPT" "$ARG" >> "$LOG_FILE" 2>&1
+  STATUS=$?
+  log "$LABEL action finished: $ARG status=$STATUS"
+  return "$STATUS"
+}
+
+ACTION="${1:-}"
+
+case "$ACTION" in
+  start|stop|restart|check_plugin_update|install_plugin_update|check_upstream_update|install_upstream_update)
+    ;;
+  *)
+    log "Unknown Lucky action: ${ACTION:-empty}"
+    exit 2
+    ;;
+esac
+
+if ! mkdir "$LOCK_DIR" 2>/dev/null; then
+  log "Another Lucky control job is already running; skipped: $ACTION"
+  exit 0
+fi
+trap 'rmdir "$LOCK_DIR" 2>/dev/null || true' EXIT INT TERM
+
+case "$ACTION" in
+  start|stop|restart)
+    run_rc_action "$ACTION"
+    ;;
+  check_plugin_update)
+    run_update_action "$PLUGIN_UPDATE" check "Lucky plugin update"
+    ;;
+  install_plugin_update)
+    run_update_action "$PLUGIN_UPDATE" install "Lucky plugin update"
+    ;;
+  check_upstream_update)
+    run_update_action "$UPSTREAM_UPDATE" check "Lucky upstream update"
+    ;;
+  install_upstream_update)
+    run_update_action "$UPSTREAM_UPDATE" install "Lucky upstream update"
+    ;;
+esac

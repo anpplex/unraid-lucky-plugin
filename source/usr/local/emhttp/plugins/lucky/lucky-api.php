@@ -1,58 +1,93 @@
 <?php
 $plugin = 'lucky';
-$rc = '/etc/rc.d/rc.lucky';
-$updateScript = "/usr/local/emhttp/plugins/$plugin/scripts/lucky-plugin-update";
-$upstreamUpdateScript = "/usr/local/emhttp/plugins/$plugin/scripts/lucky-upstream-update";
+$jobScript = "/usr/local/emhttp/plugins/$plugin/scripts/lucky-control-job";
 
 header('Content-Type: text/plain; charset=UTF-8');
 
-function lucky_api_run($command, $args = []) {
-  $parts = [escapeshellcmd($command)];
-  foreach ($args as $arg) {
-    $parts[] = escapeshellarg($arg);
+function lucky_api_tail_file($path, $lines = 180) {
+  if (!is_readable($path)) {
+    return '';
   }
-  return shell_exec(implode(' ', $parts) . ' 2>&1') ?: '';
+
+  $size = filesize($path);
+  if ($size === false || $size <= 0) {
+    return '';
+  }
+
+  $maxBytes = 262144;
+  $start = max(0, $size - $maxBytes);
+  $handle = fopen($path, 'rb');
+  if ($handle === false) {
+    return '';
+  }
+
+  fseek($handle, $start);
+  if ($start > 0) {
+    fgets($handle);
+  }
+
+  $content = stream_get_contents($handle);
+  fclose($handle);
+  if ($content === false || $content === '') {
+    return '';
+  }
+
+  $rows = preg_split('/\r\n|\r|\n/', rtrim($content));
+  $output = implode("\n", array_slice($rows, -$lines));
+  return trim($output);
 }
 
-function lucky_api_update($script, $action) {
-  if (!is_executable($script)) {
-    return 'Update script is not available.';
-  }
-  return lucky_api_run($script, [$action]);
-}
-
-function lucky_api_logs($rc) {
+function lucky_api_logs() {
   $chunks = [];
-  $updateLog = '/var/log/lucky-plugin-update.log';
-  if (is_file($updateLog)) {
-    $chunks[] = "== Lucky plugin and upstream update log ==\n" . (shell_exec('tail -n 180 ' . escapeshellarg($updateLog) . ' 2>/dev/null') ?: '');
+  $logs = [
+    'Lucky control log' => '/var/log/lucky-control.log',
+    'Lucky plugin and upstream update log' => '/var/log/lucky-plugin-update.log',
+    'Lucky service log' => '/var/log/lucky.log',
+  ];
+
+  foreach ($logs as $title => $path) {
+    $content = lucky_api_tail_file($path, 180);
+    if ($content !== '') {
+      $chunks[] = "== $title ==\n" . $content;
+    }
   }
-  $luckyLog = lucky_api_run($rc, ['logs', '180']);
-  if (trim($luckyLog) !== '') {
-    $chunks[] = "== Lucky service log ==\n" . $luckyLog;
+
+  if (empty($chunks)) {
+    return 'No Lucky logs yet.';
   }
+
   return trim(implode("\n\n", $chunks));
+}
+
+function lucky_api_queue_job($script, $job) {
+  if (!is_executable($script)) {
+    return 'Lucky control job script is not available.';
+  }
+
+  $command = escapeshellcmd($script) . ' ' . escapeshellarg($job);
+  exec($command . ' >/dev/null 2>&1 &');
+  return 'Queued Lucky action: ' . $job . "\nOpen the log panel to watch progress.";
 }
 
 $action = $_POST['action'] ?? '';
 
 if ($action === 'logs') {
-  echo lucky_api_logs($rc);
+  echo lucky_api_logs();
   exit;
 }
 
-if (in_array($action, ['start', 'stop', 'restart'], true)) {
-  echo lucky_api_run($rc, [$action]);
-  exit;
-}
+$jobs = [
+  'start' => 'start',
+  'stop' => 'stop',
+  'restart' => 'restart',
+  'check_plugin_update' => 'check_plugin_update',
+  'install_plugin_update' => 'install_plugin_update',
+  'check_upstream_update' => 'check_upstream_update',
+  'install_upstream_update' => 'install_upstream_update',
+];
 
-if (in_array($action, ['check_plugin_update', 'install_plugin_update'], true)) {
-  echo lucky_api_update($updateScript, $action === 'install_plugin_update' ? 'install' : 'check');
-  exit;
-}
-
-if (in_array($action, ['check_upstream_update', 'install_upstream_update'], true)) {
-  echo lucky_api_update($upstreamUpdateScript, $action === 'install_upstream_update' ? 'install' : 'check');
+if (isset($jobs[$action])) {
+  echo lucky_api_queue_job($jobScript, $jobs[$action]);
   exit;
 }
 
