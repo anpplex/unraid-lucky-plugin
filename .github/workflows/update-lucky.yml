@@ -31,6 +31,57 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: bash scripts/update-upstream.sh
 
+      - name: Patch Lucky page action endpoint
+        run: |
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+
+          page = Path("source/usr/local/emhttp/plugins/lucky/Lucky.page")
+          plugin_version = Path("PLUGIN_VERSION").read_text().strip()
+          text = page.read_text()
+
+          text = re.sub(r'^Version="[^"]+"', f'Version="{plugin_version}"', text, flags=re.M)
+          if '$apiEndpoint = ' not in text:
+            text = text.replace(
+              '$scheduleScript = "/usr/local/emhttp/plugins/$plugin/scripts/lucky-update-schedule";\n',
+              '$scheduleScript = "/usr/local/emhttp/plugins/$plugin/scripts/lucky-update-schedule";\n'
+              '$apiEndpoint = "/plugins/$plugin/lucky-api.php";\n',
+            )
+
+          start = "if (($_GET['ajax'] ?? '') === 'logs') {"
+          end = "if ($_SERVER['REQUEST_METHOD'] === 'POST') {"
+          if start in text:
+            start_index = text.index(start)
+            end_index = text.index(end, start_index)
+            text = text[:start_index] + text[end_index:]
+
+          if 'var apiEndpoint = ' not in text:
+            text = text.replace(
+              "(function () {\n  var toggle = document.getElementById('lucky-log-toggle');",
+              "(function () {\n"
+              "  var apiEndpoint = <?= json_encode($apiEndpoint) ?>;\n"
+              "  var csrfToken = <?= json_encode($csrfToken) ?>;\n"
+              "  var toggle = document.getElementById('lucky-log-toggle');",
+            )
+
+          text = text.replace(
+            "return fetch(window.location.pathname + '?ajax=logs&_=' + Date.now(), { cache: 'no-store' })",
+            "var formData = new FormData();\n"
+            "    formData.set('csrf_token', csrfToken);\n"
+            "    formData.set('action', 'logs');\n"
+            "    return fetch(apiEndpoint, { method: 'POST', body: formData, cache: 'no-store' })",
+          )
+          text = text.replace("      formData.set('ajax', 'action');", "      formData.set('csrf_token', csrfToken);")
+          text = text.replace("fetch(window.location.pathname, { method: 'POST', body: formData })", "fetch(apiEndpoint, { method: 'POST', body: formData })")
+          text = text.replace(
+            "if (action === 'install_plugin_update' || action === 'install_upstream_update')",
+            "if (action === 'start' || action === 'stop' || action === 'restart' || action === 'install_plugin_update' || action === 'install_upstream_update')",
+          )
+
+          page.write_text(text)
+          PY
+
       - name: Build plugin
         run: bash scripts/build-plugin.sh "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${GITHUB_REF_NAME}"
 
@@ -46,6 +97,7 @@ jobs:
           xmllint --noout dist/lucky.plg
           xmllint --noout dist/lucky-x86_64.plg
           bash -n scripts/build-plugin.sh source/etc/rc.d/rc.lucky source/install/doinst.sh source/usr/local/emhttp/plugins/lucky/event/started source/usr/local/emhttp/plugins/lucky/scripts/lucky-status source/usr/local/emhttp/plugins/lucky/scripts/lucky-plugin-update source/usr/local/emhttp/plugins/lucky/scripts/lucky-upstream-update source/usr/local/emhttp/plugins/lucky/scripts/lucky-update-schedule
+          php -l source/usr/local/emhttp/plugins/lucky/lucky-api.php
           tar -tf "dist/packages/lucky-$(cat PLUGIN_VERSION)-x86_64-1.txz" | grep -q 'usr/local/lucky/lucky'
 
       - name: Commit changes

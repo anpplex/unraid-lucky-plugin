@@ -23,6 +23,7 @@
 - Refine Chinese autostart option labels.
 - Add pluginURL metadata so Unraid can check plugin updates.
 - Add separate GitHub plugin and Lucky upstream update controls with live logs.
+- Move page actions to a dedicated plugin API endpoint so service controls work reliably.
   </CHANGES>
 
   <FILE Name="/boot/config/plugins/&name;/lucky-&version;-x86_64-1.txz" Run="upgradepkg --install-new">
