@@ -1,4 +1,5 @@
 #!/bin/sh
+# Runs Lucky page actions outside PHP-FPM so Unraid WebGUI requests return quickly.
 
 PLUGIN="lucky"
 RC="/etc/rc.d/rc.lucky"
