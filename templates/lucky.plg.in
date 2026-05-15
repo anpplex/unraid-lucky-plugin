@@ -3,11 +3,13 @@
 <!ENTITY name "lucky">
 <!ENTITY author "Apex">
 <!ENTITY version "@PLUGIN_VERSION@">
+<!ENTITY pluginURL "@PLUGIN_URL@">
 <!ENTITY launch "Settings/Lucky">
 ]>
 <PLUGIN name="&name;"
         author="&author;"
         version="&version;"
+        pluginURL="&pluginURL;"
         launch="&launch;">
 
   <CHANGES>
@@ -19,6 +21,7 @@
 - Add persistent runtime configuration under /boot/config/plugins/lucky.
 - Add boot and array-start Lucky autostart modes.
 - Refine Chinese autostart option labels.
+- Add pluginURL metadata so Unraid can check plugin updates.
   </CHANGES>
 
   <FILE Name="/boot/config/plugins/&name;/lucky-&version;-x86_64-1.txz" Run="upgradepkg --install-new">

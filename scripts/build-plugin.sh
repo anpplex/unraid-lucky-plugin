@@ -160,10 +160,12 @@ emit_base64_file_blocks() {
   '
 }
 
+PLUGIN_URL="${BASE_URL%/}/dist/lucky.plg"
 PKG_URL="${BASE_URL%/}/dist/packages/$PKG_NAME"
 sed \
   -e "s|@VERSION@|$VERSION|g" \
   -e "s|@PLUGIN_VERSION@|$PLUGIN_VERSION|g" \
+  -e "s|@PLUGIN_URL@|$PLUGIN_URL|g" \
   -e "s|@PACKAGE_URL@|$PKG_URL|g" \
   -e "s|@PACKAGE_MD5@|$MD5|g" \
   "$PLG_TEMPLATE" > "$PLG_PATH"
@@ -175,11 +177,13 @@ sed \
 <!ENTITY name "lucky">
 <!ENTITY author "Apex">
 <!ENTITY version "$PLUGIN_VERSION">
+<!ENTITY pluginURL "$PLUGIN_URL">
 <!ENTITY launch "Settings/Lucky">
 ]>
 <PLUGIN name="&name;"
         author="&author;"
         version="&version;"
+        pluginURL="&pluginURL;"
         launch="&launch;">
 
   <CHANGES>
@@ -191,6 +195,7 @@ sed \
 - Add persistent runtime configuration under /boot/config/plugins/lucky.
 - Add boot and array-start Lucky autostart modes.
 - Refine Chinese autostart option labels.
+- Add pluginURL metadata so Unraid can check plugin updates.
   </CHANGES>
 
   <FILE Run="/bin/bash">
