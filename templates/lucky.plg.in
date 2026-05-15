@@ -24,6 +24,7 @@
 - Add pluginURL metadata so Unraid can check plugin updates.
 - Add separate GitHub plugin and Lucky upstream update controls with live logs.
 - Move page actions to a dedicated plugin API endpoint so service controls work reliably.
+- Run service and update actions as background jobs to avoid Unraid PHP-FPM timeouts.
   </CHANGES>
 
   <FILE Name="/boot/config/plugins/&name;/lucky-&version;-x86_64-1.txz" Run="upgradepkg --install-new">
@@ -46,6 +47,7 @@ chmod 0755 /usr/local/emhttp/plugins/lucky/scripts/lucky-status
 chmod 0755 /usr/local/emhttp/plugins/lucky/scripts/lucky-plugin-update
 chmod 0755 /usr/local/emhttp/plugins/lucky/scripts/lucky-upstream-update
 chmod 0755 /usr/local/emhttp/plugins/lucky/scripts/lucky-update-schedule
+chmod 0755 /usr/local/emhttp/plugins/lucky/scripts/lucky-control-job
 /usr/local/emhttp/plugins/lucky/scripts/lucky-update-schedule apply >/dev/null 2&gt;&amp;1 || true
 if [ -x /boot/config/plugins/lucky/upstream/lucky ]; then
   cp /boot/config/plugins/lucky/upstream/lucky /usr/local/lucky/lucky
