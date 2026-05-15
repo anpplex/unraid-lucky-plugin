@@ -190,6 +190,7 @@ sed \
 - Add Chinese/English plugin UI language switching, defaulting to Chinese.
 - Add persistent runtime configuration under /boot/config/plugins/lucky.
 - Add boot and array-start Lucky autostart modes.
+- Refine Chinese autostart option labels.
   </CHANGES>
 
   <FILE Run="/bin/bash">

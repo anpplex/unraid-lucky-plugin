@@ -1,5 +1,5 @@
 Author="Apex"
-Version="2.27.2.7"
+Version="2.27.2.8"
 Title="Lucky"
 Menu="NetworkServices"
 Icon="lucky.png"
@@ -134,8 +134,8 @@ $luckyText = [
     'config_dir' => '配置目录',
     'web_port' => 'Web UI 端口',
     'autostart' => 'Lucky 自动启动',
-    'autostart_array' => '随阵列启动自动启动 Lucky',
-    'autostart_boot' => 'Unraid 开机自动启动 Lucky',
+    'autostart_array' => '随阵列启动',
+    'autostart_boot' => '随UNRAID开机启动',
     'autostart_no' => '不自动启动',
     'ui_lang' => '界面语言',
     'ui_lang_zh' => '中文',
