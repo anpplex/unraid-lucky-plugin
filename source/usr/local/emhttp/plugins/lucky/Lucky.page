@@ -1,5 +1,5 @@
 Author="Apex"
-Version="2.27.2.13"
+Version="2.27.2.15"
 Title="Lucky"
 Menu="NetworkServices"
 Icon="lucky.png"
@@ -9,10 +9,10 @@ Type="php"
 $plugin = 'lucky';
 $configFile = "/boot/config/plugins/$plugin/lucky.cfg";
 $defaultsFile = "/usr/local/emhttp/plugins/$plugin/defaults/lucky.cfg";
+$rc = '/etc/rc.d/rc.lucky';
 $statusScript = "/usr/local/emhttp/plugins/$plugin/scripts/lucky-status";
 $scheduleScript = "/usr/local/emhttp/plugins/$plugin/scripts/lucky-update-schedule";
-$apiEndpoint = "/plugins/$plugin/lucky-api.php";
-$jobScript = "/usr/local/emhttp/plugins/$plugin/scripts/lucky-control-job";
+$upstreamUpdateScript = "/usr/local/emhttp/plugins/$plugin/scripts/lucky-upstream-update";
 $message = '';
 global $var;
 $csrfToken = $var['csrf_token'] ?? '';
@@ -82,6 +82,17 @@ function lucky_apply_update_schedule($script) {
   return shell_exec(escapeshellcmd($script) . ' apply 2>&1') ?: '';
 }
 
+function lucky_run($rc, $action) {
+  $allowed = ['start', 'stop', 'restart'];
+  if (!in_array($action, $allowed, true)) {
+    return 'Unknown action.';
+  }
+  if (!is_executable($rc)) {
+    return 'Lucky rc script is not available.';
+  }
+  return shell_exec(escapeshellcmd($rc) . ' ' . escapeshellarg($action) . ' 2>&1') ?: '';
+}
+
 function lucky_status($script) {
   $status = [];
   if (!is_executable($script)) {
@@ -101,24 +112,18 @@ function lucky_h($value) {
   return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
 }
 
-function lucky_queue_job($script, $job) {
+function lucky_update_upstream($script, $action) {
   $allowed = [
-    'start',
-    'stop',
-    'restart',
-    'check_plugin_update',
-    'install_plugin_update',
-    'check_upstream_update',
-    'install_upstream_update',
+    'check_upstream_update' => 'check',
+    'install_upstream_update' => 'install',
   ];
-  if (!in_array($job, $allowed, true)) {
+  if (!isset($allowed[$action])) {
     return 'Unknown action.';
   }
   if (!is_executable($script)) {
-    return 'Lucky control job script is not available.';
+    return 'Lucky upstream update script is not available.';
   }
-  exec(escapeshellcmd($script) . ' ' . escapeshellarg($job) . ' >/dev/null 2>&1 &');
-  return 'Queued Lucky action: ' . $job . "\nOpen the log panel to watch progress.";
+  return shell_exec(escapeshellcmd($script) . ' ' . escapeshellarg($allowed[$action]) . ' 2>&1') ?: '';
 }
 
 $luckyText = [
@@ -139,7 +144,7 @@ $luckyText = [
     'ui_lang_zh' => '中文',
     'ui_lang_en' => 'English',
     'extra_args' => '额外启动参数',
-    'update_interval' => '插件更新周期',
+    'update_interval' => 'Lucky 主程序更新周期',
     'off' => '关闭',
     'daily' => '每天',
     'weekly' => '每周',
@@ -148,15 +153,10 @@ $luckyText = [
     'start' => '启动',
     'stop' => '停止',
     'restart' => '重启',
-    'logs' => '显示日志',
-    'hide_logs' => '隐藏日志',
-    'plugin_update' => '插件更新',
-    'github_plugin_update' => 'GitHub 插件更新',
+    'plugin_update' => 'Lucky 主程序更新',
     'upstream_update' => 'Lucky 主程序更新',
     'check_update' => '检查更新',
     'install_update' => '安装更新',
-    'check_plugin_update' => '检查插件更新',
-    'install_plugin_update' => '安装插件更新',
     'check_upstream_update' => '检查主程序更新',
     'install_upstream_update' => '安装主程序更新',
     'settings_saved' => '设置已保存。',
@@ -187,15 +187,10 @@ $luckyText = [
     'start' => 'Start',
     'stop' => 'Stop',
     'restart' => 'Restart',
-    'logs' => 'Show Logs',
-    'hide_logs' => 'Hide Logs',
-    'plugin_update' => 'Updates',
-    'github_plugin_update' => 'GitHub plugin update',
+    'plugin_update' => 'Lucky Upstream Update',
     'upstream_update' => 'Lucky upstream update',
     'check_update' => 'Check Update',
     'install_update' => 'Install Update',
-    'check_plugin_update' => 'Check Plugin Update',
-    'install_plugin_update' => 'Install Plugin Update',
     'check_upstream_update' => 'Check Lucky Update',
     'install_upstream_update' => 'Install Lucky Update',
     'settings_saved' => 'Settings saved.',
@@ -209,7 +204,7 @@ $config['UI_LANG'] = lucky_normalize_lang($config['UI_LANG'] ?? 'zh');
 $lang = lucky_normalize_lang($_POST['UI_LANG'] ?? $config['UI_LANG']);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $action = $_POST['action'] ?? '';
+  $action = $_POST['action'] ?? ($_POST['lucky_action'] ?? '');
 
   if ($action === 'save') {
     $config['CONFIG_DIR'] = trim($_POST['CONFIG_DIR'] ?? $config['CONFIG_DIR']);
@@ -226,8 +221,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     lucky_write_config($configFile, $config);
     lucky_apply_update_schedule($scheduleScript);
     $message = lucky_t('settings_saved');
-  } elseif (in_array($action, ['start', 'stop', 'restart', 'check_plugin_update', 'install_plugin_update', 'check_upstream_update', 'install_upstream_update'], true)) {
-    $message = lucky_queue_job($jobScript, $action);
+  } elseif (in_array($action, ['start', 'stop', 'restart'], true)) {
+    $message = lucky_run($rc, $action);
+  } elseif (in_array($action, ['check_upstream_update', 'install_upstream_update'], true)) {
+    $message = lucky_update_upstream($upstreamUpdateScript, $action);
   }
 }
 
@@ -249,8 +246,6 @@ $webUrl = 'http://' . $host . ':' . ($config['WEB_PORT'] ?? '16601');
 .lucky-pill.running { background: #298a43; }
 .lucky-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
 .lucky-output { width: 100%; min-height: 120px; white-space: pre-wrap; font-family: monospace; }
-.lucky-log-panel { display: none; margin-top: 12px; }
-.lucky-log-panel.is-visible { display: block; }
 .lucky-update-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
 .lucky-update-group h4 { margin: 0 0 8px; font-size: 14px; }
 .lucky-table input[type="text"], .lucky-table select { min-width: 420px; }
@@ -324,130 +319,35 @@ $webUrl = 'http://' . $host . ':' . ($config['WEB_PORT'] ?? '16601');
     <p><input type="submit" value="<?= lucky_h(lucky_t('save')) ?>"></p>
   </form>
 
-  <form method="post" class="lucky-actions lucky-ajax-form">
+  <form method="post" action="/Settings/Lucky" class="lucky-actions">
     <input type="hidden" name="csrf_token" value="<?= lucky_h($csrfToken) ?>">
-    <button type="submit" name="action" value="start"><?= lucky_h(lucky_t('start')) ?></button>
-    <button type="submit" name="action" value="stop"><?= lucky_h(lucky_t('stop')) ?></button>
-    <button type="submit" name="action" value="restart"><?= lucky_h(lucky_t('restart')) ?></button>
-    <button type="button" id="lucky-log-toggle" data-show="<?= lucky_h(lucky_t('logs')) ?>" data-hide="<?= lucky_h(lucky_t('hide_logs')) ?>"><?= lucky_h(lucky_t('logs')) ?></button>
+    <input type="hidden" name="lucky_action" value="">
+    <button type="submit" name="action" value="start" onclick="this.form.elements.lucky_action.value='start'">
+      <?= lucky_h(lucky_t('start')) ?>
+    </button>
+    <button type="submit" name="action" value="stop" onclick="this.form.elements.lucky_action.value='stop'">
+      <?= lucky_h(lucky_t('stop')) ?>
+    </button>
+    <button type="submit" name="action" value="restart" onclick="this.form.elements.lucky_action.value='restart'">
+      <?= lucky_h(lucky_t('restart')) ?>
+    </button>
   </form>
 
   <div class="lucky-section">
     <h3><?= lucky_h(lucky_t('plugin_update')) ?></h3>
-    <div class="lucky-update-grid">
-      <div class="lucky-update-group">
-        <h4><?= lucky_h(lucky_t('github_plugin_update')) ?></h4>
-        <form method="post" class="lucky-actions lucky-ajax-form">
-          <input type="hidden" name="csrf_token" value="<?= lucky_h($csrfToken) ?>">
-          <button type="submit" name="action" value="check_plugin_update"><?= lucky_h(lucky_t('check_plugin_update')) ?></button>
-          <button type="submit" name="action" value="install_plugin_update"><?= lucky_h(lucky_t('install_plugin_update')) ?></button>
-        </form>
-      </div>
-      <div class="lucky-update-group">
-        <h4><?= lucky_h(lucky_t('upstream_update')) ?></h4>
-        <form method="post" class="lucky-actions lucky-ajax-form">
-          <input type="hidden" name="csrf_token" value="<?= lucky_h($csrfToken) ?>">
-          <button type="submit" name="action" value="check_upstream_update"><?= lucky_h(lucky_t('check_upstream_update')) ?></button>
-          <button type="submit" name="action" value="install_upstream_update"><?= lucky_h(lucky_t('install_upstream_update')) ?></button>
-        </form>
-      </div>
-    </div>
+    <form method="post" action="/Settings/Lucky" class="lucky-actions">
+      <input type="hidden" name="csrf_token" value="<?= lucky_h($csrfToken) ?>">
+      <input type="hidden" name="lucky_action" value="">
+      <button type="submit" name="action" value="check_upstream_update" onclick="this.form.elements.lucky_action.value='check_upstream_update'">
+        <?= lucky_h(lucky_t('check_upstream_update')) ?>
+      </button>
+      <button type="submit" name="action" value="install_upstream_update" onclick="this.form.elements.lucky_action.value='install_upstream_update'">
+        <?= lucky_h(lucky_t('install_upstream_update')) ?>
+      </button>
+    </form>
   </div>
 
   <?php if ($message !== ''): ?>
     <textarea class="lucky-output" readonly><?= lucky_h(trim($message)) ?></textarea>
   <?php endif; ?>
-  <div id="lucky-log-panel" class="lucky-log-panel">
-    <textarea id="lucky-log-output" class="lucky-output" readonly></textarea>
-  </div>
 </div>
-
-<script>
-(function () {
-  var apiEndpoint = <?= json_encode($apiEndpoint) ?>;
-  var csrfToken = <?= json_encode($csrfToken) ?>;
-  var toggle = document.getElementById('lucky-log-toggle');
-  var panel = document.getElementById('lucky-log-panel');
-  var output = document.getElementById('lucky-log-output');
-  var timer = null;
-  var logRequest = null;
-  var lastAction = null;
-
-  function appendOutput(text) {
-    if (!text) return;
-    output.value = (output.value ? output.value + "\n\n" : "") + text.trim();
-    output.scrollTop = output.scrollHeight;
-  }
-
-  function refreshLogs() {
-    if (logRequest) return logRequest;
-    var formData = new FormData();
-    formData.set('csrf_token', csrfToken);
-    formData.set('action', 'logs');
-    logRequest = fetch(apiEndpoint, { method: 'POST', body: formData, cache: 'no-store', credentials: 'same-origin' })
-      .then(function (response) {
-        return response.text().then(function (text) {
-          if (!response.ok) throw new Error('HTTP ' + response.status + ': ' + text);
-          return text;
-        });
-      })
-      .then(function (text) {
-        output.value = text || '';
-        output.scrollTop = output.scrollHeight;
-      })
-      .catch(function (error) { appendOutput(String(error)); })
-      .then(function () { logRequest = null; });
-    return logRequest;
-  }
-
-  function showLogs(visible) {
-    panel.classList.toggle('is-visible', visible);
-    toggle.textContent = visible ? toggle.getAttribute('data-hide') : toggle.getAttribute('data-show');
-    if (visible) {
-      refreshLogs();
-      if (!timer) timer = setInterval(refreshLogs, 3000);
-    } else if (timer) {
-      clearInterval(timer);
-      timer = null;
-    }
-  }
-
-  toggle.addEventListener('click', function () {
-    showLogs(!panel.classList.contains('is-visible'));
-  });
-
-  document.querySelectorAll('form.lucky-ajax-form').forEach(function (form) {
-    form.querySelectorAll('button[name="action"]').forEach(function (button) {
-      button.addEventListener('click', function () {
-        lastAction = button.value;
-      });
-    });
-
-    form.addEventListener('submit', function (event) {
-      event.preventDefault();
-      var formData = new FormData(form);
-      var action = event.submitter && event.submitter.name === 'action' ? event.submitter.value : lastAction || formData.get('action');
-      if (action) formData.set('action', action);
-      formData.set('csrf_token', csrfToken);
-      showLogs(true);
-      appendOutput('Running: ' + action);
-      fetch(apiEndpoint, { method: 'POST', body: formData, credentials: 'same-origin' })
-        .then(function (response) {
-          return response.text().then(function (text) {
-            if (!response.ok) throw new Error('HTTP ' + response.status + ': ' + text);
-            return text;
-          });
-        })
-        .then(function (text) {
-          return refreshLogs().then(function () { appendOutput(text); });
-        })
-        .then(function () {
-          if (action === 'start' || action === 'stop' || action === 'restart' || action === 'install_plugin_update' || action === 'install_upstream_update') {
-            setTimeout(function () { window.location.reload(); }, 5000);
-          }
-        })
-        .catch(function (error) { appendOutput(String(error)); });
-    });
-  });
-})();
-</script>
