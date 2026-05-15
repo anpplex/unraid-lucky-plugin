@@ -9,7 +9,7 @@ OVERRIDE_DIR="/boot/config/plugins/lucky/upstream"
 OVERRIDE_BIN="$OVERRIDE_DIR/lucky"
 OVERRIDE_VERSION_FILE="$OVERRIDE_DIR/VERSION"
 OVERRIDE_SHA256_FILE="$OVERRIDE_DIR/SHA256"
-LOG_FILE="/var/log/lucky-plugin-update.log"
+LOG_FILE="/var/log/lucky-upstream-update.log"
 
 log() {
   mkdir -p "$(dirname "$LOG_FILE")"
