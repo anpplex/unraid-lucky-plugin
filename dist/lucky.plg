@@ -2,7 +2,7 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name "lucky">
 <!ENTITY author "Apex">
-<!ENTITY version "2.27.2.9">
+<!ENTITY version "2.27.2.10">
 <!ENTITY pluginURL "https://raw.githubusercontent.com/anpplex/unraid-lucky-plugin/main/dist/lucky.plg">
 <!ENTITY launch "Settings/Lucky">
 ]>
@@ -13,7 +13,7 @@
         launch="&launch;">
 
   <CHANGES>
-## 2.27.2.9
+## 2.27.2.10
 
 - Install Lucky 2.27.2 Linux x86_64 binary directly.
 - Add Lucky runtime controls, update controls, and a compact plugin summary.
@@ -22,11 +22,12 @@
 - Add boot and array-start Lucky autostart modes.
 - Refine Chinese autostart option labels.
 - Add pluginURL metadata so Unraid can check plugin updates.
+- Add separate GitHub plugin and Lucky upstream update controls with live logs.
   </CHANGES>
 
   <FILE Name="/boot/config/plugins/&name;/lucky-&version;-x86_64-1.txz" Run="upgradepkg --install-new">
-    <URL>https://raw.githubusercontent.com/anpplex/unraid-lucky-plugin/main/dist/packages/lucky-2.27.2.9-x86_64-1.txz</URL>
-    <MD5>b1a108b74a3d670f4bcb649b03a1ee6c</MD5>
+    <URL>https://raw.githubusercontent.com/anpplex/unraid-lucky-plugin/main/dist/packages/lucky-2.27.2.10-x86_64-1.txz</URL>
+    <MD5>cd59472de851d389e67dcbcbe2ec83d8</MD5>
   </FILE>
 
   <FILE Run="/bin/bash">
@@ -42,8 +43,16 @@ chmod 0755 /etc/rc.d/rc.lucky
 chmod 0755 /usr/local/emhttp/plugins/lucky/event/started
 chmod 0755 /usr/local/emhttp/plugins/lucky/scripts/lucky-status
 chmod 0755 /usr/local/emhttp/plugins/lucky/scripts/lucky-plugin-update
+chmod 0755 /usr/local/emhttp/plugins/lucky/scripts/lucky-upstream-update
 chmod 0755 /usr/local/emhttp/plugins/lucky/scripts/lucky-update-schedule
 /usr/local/emhttp/plugins/lucky/scripts/lucky-update-schedule apply >/dev/null 2&gt;&amp;1 || true
+if [ -x /boot/config/plugins/lucky/upstream/lucky ]; then
+  cp /boot/config/plugins/lucky/upstream/lucky /usr/local/lucky/lucky
+  chmod 0755 /usr/local/lucky/lucky
+fi
+if [ -s /boot/config/plugins/lucky/upstream/VERSION ]; then
+  cp /boot/config/plugins/lucky/upstream/VERSION /usr/local/emhttp/plugins/lucky/VERSION
+fi
     </INLINE>
   </FILE>
 
