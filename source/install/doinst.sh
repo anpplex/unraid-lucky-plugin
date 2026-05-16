@@ -23,10 +23,13 @@ chmod 0755 /usr/local/lucky/lucky
 ln -sf /usr/local/lucky/lucky /usr/local/sbin/lucky
 chmod 0755 /etc/rc.d/rc.lucky
 chmod 0755 /usr/local/emhttp/plugins/lucky/event/started
+chmod 0755 /usr/local/emhttp/plugins/lucky/scripts/lucky-autostart
 chmod 0755 /usr/local/emhttp/plugins/lucky/scripts/lucky-status
-chmod 0755 /usr/local/emhttp/plugins/lucky/scripts/lucky-plugin-update
 chmod 0755 /usr/local/emhttp/plugins/lucky/scripts/lucky-upstream-update
 chmod 0755 /usr/local/emhttp/plugins/lucky/scripts/lucky-update-schedule
+rm -f /usr/local/emhttp/plugins/lucky/lucky-api.php
+rm -f /usr/local/emhttp/plugins/lucky/scripts/lucky-control-job
+rm -f /usr/local/emhttp/plugins/lucky/scripts/lucky-plugin-update
 /usr/local/emhttp/plugins/lucky/scripts/lucky-update-schedule apply >/dev/null 2>&1 || true
 
 if [ -x /boot/config/plugins/lucky/upstream/lucky ]; then
@@ -38,6 +41,6 @@ if [ -s /boot/config/plugins/lucky/upstream/VERSION ]; then
   cp /boot/config/plugins/lucky/upstream/VERSION /usr/local/emhttp/plugins/lucky/VERSION
 fi
 
-if [ "$AUTOSTART" = "boot" ] && [ -x /etc/rc.d/rc.lucky ]; then
-  /etc/rc.d/rc.lucky start >/dev/null 2>&1 &
+if [ "$AUTOSTART" = "boot" ] && [ -x /usr/local/emhttp/plugins/lucky/scripts/lucky-autostart ]; then
+  /usr/local/emhttp/plugins/lucky/scripts/lucky-autostart boot >/dev/null 2>&1 &
 fi

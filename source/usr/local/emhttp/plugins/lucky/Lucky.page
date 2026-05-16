@@ -1,8 +1,8 @@
-Author="Apex"
-Version="2.27.2.15"
-Title="Lucky"
 Menu="NetworkServices"
+Title="Lucky"
 Icon="lucky.png"
+Author="Apex"
+Version="2.27.2.16"
 Type="php"
 ---
 <?php

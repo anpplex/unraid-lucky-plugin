@@ -1,0 +1,60 @@
+#!/bin/sh
+
+CONFIG="${LUCKY_CONFIG:-/boot/config/plugins/lucky/lucky.cfg}"
+RC="${LUCKY_RC:-/etc/rc.d/rc.lucky}"
+LOG_FILE="${LUCKY_AUTOSTART_LOG:-/var/log/lucky-autostart.log}"
+AUTOSTART="array"
+MODE="${1:-boot}"
+
+log() {
+  mkdir -p "$(dirname "$LOG_FILE")"
+  printf '%s [%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$MODE" "$*" >> "$LOG_FILE"
+}
+
+if [ -f "$CONFIG" ]; then
+  . "$CONFIG"
+fi
+
+case "$AUTOSTART" in
+  yes|array) AUTOSTART="array" ;;
+  boot) AUTOSTART="boot" ;;
+  *) AUTOSTART="no" ;;
+esac
+
+case "$MODE" in
+  boot)
+    [ "$AUTOSTART" = "boot" ] || {
+      log "Skipped: AUTOSTART=$AUTOSTART"
+      exit 0
+    }
+    ;;
+  array)
+    [ "$AUTOSTART" = "array" ] || {
+      log "Skipped: AUTOSTART=$AUTOSTART"
+      exit 0
+    }
+    ;;
+  *)
+    log "Unknown mode: $MODE"
+    exit 2
+    ;;
+esac
+
+COUNT=1
+while [ "$COUNT" -le 6 ]; do
+  if [ ! -x "$RC" ]; then
+    log "Attempt $COUNT failed: rc script is not executable: $RC"
+  else
+    log "Attempt $COUNT starting Lucky"
+    if "$RC" start >> "$LOG_FILE" 2>&1; then
+      log "Lucky autostart completed"
+      exit 0
+    fi
+    log "Attempt $COUNT failed"
+  fi
+  COUNT=$((COUNT + 1))
+  sleep 10
+done
+
+log "Lucky autostart failed after retries"
+exit 1

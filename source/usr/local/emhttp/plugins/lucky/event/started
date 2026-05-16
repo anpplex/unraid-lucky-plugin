@@ -1,20 +1,7 @@
 #!/bin/sh
 
-CONFIG="/boot/config/plugins/lucky/lucky.cfg"
-AUTOSTART="array"
-
-if [ -f "$CONFIG" ]; then
-  . "$CONFIG"
-fi
-
-case "$AUTOSTART" in
-  yes|array) AUTOSTART="array" ;;
-  boot) AUTOSTART="boot" ;;
-  *) AUTOSTART="no" ;;
-esac
-
-if [ "$AUTOSTART" = "array" ] && [ -x /etc/rc.d/rc.lucky ]; then
-  /etc/rc.d/rc.lucky start >/dev/null 2>&1 &
+if [ -x /usr/local/emhttp/plugins/lucky/scripts/lucky-autostart ]; then
+  /usr/local/emhttp/plugins/lucky/scripts/lucky-autostart array >/dev/null 2>&1 &
 fi
 
 if [ -x /usr/local/emhttp/plugins/lucky/scripts/lucky-update-schedule ]; then
