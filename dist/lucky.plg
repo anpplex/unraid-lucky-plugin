@@ -30,7 +30,7 @@
 
   <FILE Name="/boot/config/plugins/&name;/lucky-&version;-x86_64-1.txz" Run="upgradepkg --install-new">
     <URL>https://raw.githubusercontent.com/anpplex/unraid-lucky-plugin/main/dist/packages/lucky-2.27.2.16-x86_64-1.txz</URL>
-    <MD5>446b1b5496df1eea2635a75a9c1641e1</MD5>
+    <MD5>aa1f1b74f921067d20b5e67c54829c0f</MD5>
   </FILE>
 
   <FILE Run="/bin/bash">
