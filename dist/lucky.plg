@@ -2,7 +2,7 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name "lucky">
 <!ENTITY author "Apex">
-<!ENTITY version "2.27.2.15">
+<!ENTITY version "2.27.2.16">
 <!ENTITY pluginURL "https://raw.githubusercontent.com/anpplex/unraid-lucky-plugin/main/dist/lucky.plg">
 <!ENTITY launch "Settings/Lucky">
 ]>
@@ -13,7 +13,7 @@
         launch="&launch;">
 
   <CHANGES>
-## 2.27.2.15
+## 2.27.2.16
 
 - Install Lucky 2.27.2 Linux x86_64 binary directly.
 - Add Lucky runtime controls, update controls, and a compact plugin summary.
@@ -22,14 +22,15 @@
 - Add boot and array-start Lucky autostart modes.
 - Refine Chinese autostart option labels.
 - Add pluginURL metadata so Unraid can check plugin updates.
-- Add separate GitHub plugin and Lucky upstream update controls with live logs.
-- Move page actions to a dedicated plugin API endpoint so service controls work reliably.
-- Run service and update actions as background jobs to avoid Unraid PHP-FPM timeouts.
+- Fix Lucky.page favorite handling by keeping Menu on the first page header line.
+- Add delayed retrying boot and array autostart with /var/log/lucky-autostart.log.
+- Keep the Lucky page focused on service controls and Lucky upstream binary updates.
+- Return command results directly on the page after start, stop, restart, or upstream update actions.
   </CHANGES>
 
   <FILE Name="/boot/config/plugins/&name;/lucky-&version;-x86_64-1.txz" Run="upgradepkg --install-new">
-    <URL>https://raw.githubusercontent.com/anpplex/unraid-lucky-plugin/main/dist/packages/lucky-2.27.2.15-x86_64-1.txz</URL>
-    <MD5>6a4f2fd90e487a44b9d4f71101d4733d</MD5>
+    <URL>https://raw.githubusercontent.com/anpplex/unraid-lucky-plugin/main/dist/packages/lucky-2.27.2.16-x86_64-1.txz</URL>
+    <MD5>446b1b5496df1eea2635a75a9c1641e1</MD5>
   </FILE>
 
   <FILE Run="/bin/bash">
@@ -43,11 +44,13 @@ ln -sf /usr/local/lucky/lucky /usr/local/sbin/lucky
 chmod 0755 /usr/local/lucky/lucky
 chmod 0755 /etc/rc.d/rc.lucky
 chmod 0755 /usr/local/emhttp/plugins/lucky/event/started
+chmod 0755 /usr/local/emhttp/plugins/lucky/scripts/lucky-autostart
 chmod 0755 /usr/local/emhttp/plugins/lucky/scripts/lucky-status
-chmod 0755 /usr/local/emhttp/plugins/lucky/scripts/lucky-plugin-update
 chmod 0755 /usr/local/emhttp/plugins/lucky/scripts/lucky-upstream-update
 chmod 0755 /usr/local/emhttp/plugins/lucky/scripts/lucky-update-schedule
-chmod 0755 /usr/local/emhttp/plugins/lucky/scripts/lucky-control-job
+rm -f /usr/local/emhttp/plugins/lucky/lucky-api.php
+rm -f /usr/local/emhttp/plugins/lucky/scripts/lucky-control-job
+rm -f /usr/local/emhttp/plugins/lucky/scripts/lucky-plugin-update
 /usr/local/emhttp/plugins/lucky/scripts/lucky-update-schedule apply >/dev/null 2&gt;&amp;1 || true
 if [ -x /boot/config/plugins/lucky/upstream/lucky ]; then
   cp /boot/config/plugins/lucky/upstream/lucky /usr/local/lucky/lucky
@@ -55,6 +58,12 @@ if [ -x /boot/config/plugins/lucky/upstream/lucky ]; then
 fi
 if [ -s /boot/config/plugins/lucky/upstream/VERSION ]; then
   cp /boot/config/plugins/lucky/upstream/VERSION /usr/local/emhttp/plugins/lucky/VERSION
+fi
+if [ -f /boot/config/plugins/lucky/lucky.cfg ]; then
+  . /boot/config/plugins/lucky/lucky.cfg
+fi
+if [ "${AUTOSTART:-array}" = "boot" ] &amp;&amp; [ -x /usr/local/emhttp/plugins/lucky/scripts/lucky-autostart ]; then
+  /usr/local/emhttp/plugins/lucky/scripts/lucky-autostart boot >/dev/null 2&gt;&amp;1 &amp;
 fi
     </INLINE>
   </FILE>
